@@ -13,6 +13,7 @@ src-tauri/gen/
 .env
 .env.*
 *.local
+.scratch/
 
 # OS
 .DS_Store
