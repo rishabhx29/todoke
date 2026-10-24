@@ -1,5 +1,23 @@
 /* Dasho — dasho.tech
-   Progressive enhancement only: the page is complete without it. */
+   Progressive enhancement only: the page is complete without it.
+
+   ── EDIT HERE ON LAUNCH DAY ─────────────────────────────────────────
+   1. Set LAUNCHED to true.
+   2. Optional: put the real release asset filenames in ASSETS for
+      direct download links. Left as-is, buttons land on the
+      latest-release page instead.
+   Every download button in #download picks these up automatically.
+   Pre-launch, the buttons are placeholder anchors (no href) and the
+   tiles say "coming with v1" — nothing links to a 404.
+   ─────────────────────────────────────────────────────────────────── */
+var RELEASES = "https://github.com/dashoapp/dasho/releases";
+var LAUNCHED = false;
+var ASSETS = {
+  windows: "Dasho_<version>_x64-setup.exe",
+  macos:   "Dasho_<version>_universal.dmg",
+  linux:   "Dasho_<version>_amd64.AppImage",
+};
+
 (function () {
   "use strict";
 
@@ -23,5 +41,43 @@
     revealed.forEach(function (el) { io.observe(el); });
   } else {
     revealed.forEach(function (el) { el.classList.add("is-in"); });
+  }
+
+  /* Downloads — hrefs come from the constants above, one config place. */
+  var grid = document.getElementById("dl-grid");
+  if (grid) {
+    if (LAUNCHED) {
+      document.querySelectorAll("[data-dl]").forEach(function (a) {
+        var asset = ASSETS[a.getAttribute("data-dl")];
+        // direct asset link only when a real filename is filled in;
+        // otherwise land on the latest-release page where GitHub lists them
+        if (asset && asset.indexOf("<version>") === -1) {
+          a.setAttribute("href", RELEASES + "/latest/download/" + asset);
+        } else {
+          a.setAttribute("href", RELEASES + "/latest");
+        }
+      });
+      grid.classList.add("dl--live");
+      grid.querySelectorAll(".dl__tag").forEach(function (t) { t.hidden = true; });
+    } else {
+      grid.classList.add("dl--soon");
+    }
+
+    /* OS detection — highlight the visitor's platform, keep all three visible. */
+    var os = null;
+    var ua = navigator.userAgent;
+    if (/Windows/i.test(ua)) os = "windows";
+    else if (/Mac|iPhone|iPad/i.test(ua)) os = "macos";
+    else if (/Linux|X11|Android/i.test(ua)) os = "linux";
+    if (os) {
+      var match = grid.querySelector('[data-os="' + os + '"]');
+      if (match) {
+        match.classList.add("dl__os--yours");
+        var chip = document.createElement("span");
+        chip.className = "dl__yours";
+        chip.textContent = "your platform";
+        match.prepend(chip);
+      }
+    }
   }
 })();
