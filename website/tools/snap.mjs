@@ -109,16 +109,26 @@ await send("Page.navigate", { url: `http://127.0.0.1:${SITE_PORT}/` });
 await new Promise((r) => setTimeout(r, 1500));
 
 if (fullPage) {
-  const { result: { value: sh } } = await send("Runtime.evaluate", {
-    expression: "document.documentElement.scrollHeight", returnByValue: true,
+  // scroll through the page so IntersectionObserver reveals fire, then return to top
+  await send("Runtime.evaluate", {
+    expression: `(async () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      const h = innerHeight;
+      for (let y = 0; y <= document.documentElement.scrollHeight; y += h) {
+        scrollTo(0, y);
+        await new Promise(r => setTimeout(r, 140));
+      }
+      scrollTo(0, 0);
+    })()`,
+    awaitPromise: true,
   });
-  await send("Emulation.setDeviceMetricsOverride", {
-    width, height: sh, deviceScaleFactor: 2, mobile: width < 700,
-  });
-  await new Promise((r) => setTimeout(r, 400));
+  await new Promise((r) => setTimeout(r, 900));
 }
 
-const shot = await send("Page.captureScreenshot", { format: "png" });
+const shot = await send("Page.captureScreenshot", {
+  format: "png",
+  ...(fullPage ? { captureBeyondViewport: true } : {}),
+});
 fs.writeFileSync(out, Buffer.from(shot.result.data, "base64"));
 
 const { result: { result: { value: layout } } } = await send("Runtime.evaluate", {

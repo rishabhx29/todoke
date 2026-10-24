@@ -19,3 +19,4 @@ src-tauri/gen/
 .DS_Store
 Thumbs.db
 desktop.ini
+website/.shots/

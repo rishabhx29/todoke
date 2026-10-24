@@ -199,6 +199,7 @@ a { color: inherit; }
   font-size: var(--fs-body);
   font-weight: 650;
   line-height: 1;
+  white-space: nowrap;
   text-decoration: none;
   cursor: pointer;
   transition:
@@ -264,6 +265,7 @@ a { color: inherit; }
    -------------------------------------------------------------------------- */
 .hero {
   position: relative;
+  overflow: hidden;
   padding-block: clamp(var(--s8), 18vh, 11rem) clamp(var(--s8), 14vh, 9rem);
 }
 /* atmosphere: one volt horizon, one teal counter-glow — quiet */
@@ -303,6 +305,74 @@ a { color: inherit; }
   margin-top: var(--s2);
 }
 
+/* Page-load sequence — one orchestrated moment, then quiet */
+.js .hero__title,
+.js .hero__sub,
+.js .hero__cta {
+  animation: rise var(--dur-3) var(--ease-out) both;
+}
+.js .hero__sub  { animation-delay: 90ms; }
+.js .hero__cta  { animation-delay: 180ms; }
+@keyframes rise {
+  from { opacity: 0; translate: 0 0.6em; }
+}
+
+/* Transfer-streak field — lane paint rushing past between pitch and proof */
+.hero__streaks {
+  position: relative;
+  height: 3.75rem;
+  margin-block: var(--s6) calc(-0.5 * var(--s6));
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+}
+.hero__streak {
+  position: absolute;
+  inset-inline: 0;
+  height: 2px;
+  border-radius: var(--r-pill);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--streak-c, var(--line)) 0 2.25rem,
+    transparent 2.25rem 3.5rem
+  );
+  animation: lane-flow var(--streak-d, 3s) linear infinite;
+}
+.js .hero__streaks { animation: fade-in var(--dur-3) var(--ease-out) 420ms both; }
+@keyframes fade-in { from { opacity: 0; } }
+.hero__streak--1 { top: 0;    --streak-c: var(--line); --streak-d: 5.2s; }
+.hero__streak--2 { top: 50%;  --streak-c: var(--line); --streak-d: 3.4s; opacity: 0.7; }
+.hero__streak--3 { top: calc(100% - 2px); --streak-c: var(--volt); --streak-d: 1.9s; opacity: 0.55; }
+@keyframes lane-flow {
+  to { background-position-x: -14rem; }
+}
+
+/* Proof strip — four facts, hairline-divided */
+.proof {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: var(--s8) 0 0;
+  border-block: 1px solid var(--line);
+}
+.proof__cell {
+  padding: var(--s4) var(--s4) var(--s4) 0;
+}
+.proof__cell + .proof__cell {
+  border-left: 1px solid var(--line);
+  padding-left: var(--s4);
+}
+.proof__k {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+}
+.proof__v {
+  margin: 0.35rem 0 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-hi);
+  letter-spacing: 0.005em;
+}
+
 /* --------------------------------------------------------------------------
    Sections — lane-dash divider is the structural language
    -------------------------------------------------------------------------- */
@@ -327,6 +397,236 @@ a { color: inherit; }
 .section__lead {
   margin-top: var(--s3);
   font-size: var(--fs-lead);
+  color: var(--text-dim);
+  max-width: 52ch;
+}
+
+/* --------------------------------------------------------------------------
+   Scroll reveals — single-shot, staggered per element via --reveal-delay.
+   Gated on .js so the page is fully visible without JavaScript.
+   -------------------------------------------------------------------------- */
+.js [data-reveal] {
+  opacity: 0;
+  translate: 0 1.25rem;
+  transition:
+    opacity var(--dur-3) var(--ease-out) var(--reveal-delay, 0ms),
+    translate var(--dur-3) var(--ease-out) var(--reveal-delay, 0ms);
+}
+.js [data-reveal].is-in {
+  opacity: 1;
+  translate: 0 0;
+}
+
+/* --------------------------------------------------------------------------
+   Features — editorial rows, hairline-divided, alternating motif side
+   -------------------------------------------------------------------------- */
+.features { margin-top: var(--s8); }
+
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(var(--s6), 6vw, var(--s9));
+  align-items: center;
+  padding-block: var(--s7);
+}
+.feature + .feature { border-top: 1px solid var(--line); }
+.feature:first-child { padding-top: var(--s4); }
+
+.feature__title {
+  font-size: clamp(1.45rem, 2.6vw, 1.9rem);
+  font-weight: 720;
+  font-stretch: 108%;
+  letter-spacing: -0.01em;
+}
+.feature__copy {
+  margin-top: var(--s3);
+  max-width: 46ch;
+}
+
+.feature--flip .feature__body { order: 2; }
+.feature--flip .feature__motif { order: 1; }
+
+.feature__motif {
+  justify-self: center;
+  width: 100%;
+  max-width: 24rem;
+}
+.motif { width: 100%; height: auto; }
+
+/* Motif 1 — lanes: multi-stream striping, one volt lane ahead */
+.motif--lanes .lane {
+  stroke: var(--line);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 22 16;
+  animation: lane-dash var(--lane-d, 2.8s) linear infinite;
+}
+.motif--lanes .lane--1 { --lane-d: 3.6s; }
+.motif--lanes .lane--2 { --lane-d: 2.6s; }
+.motif--lanes .lane--3 { --lane-d: 3.1s; }
+.motif--lanes .lane--volt {
+  stroke: var(--volt);
+  stroke-width: 4;
+  --lane-d: 1.5s;
+}
+@keyframes lane-dash {
+  to { stroke-dashoffset: -38; } /* one dash+gap period, seamless loop */
+}
+
+/* Motif 2 — resume: progress interrupted twice, then completes */
+.motif--resume .resume__track {
+  stroke: var(--line);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+.motif--resume .resume__fill {
+  stroke: var(--volt);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 55; /* static fallback: mid-transfer */
+  transform-origin: 8px 75px;
+  animation: resume-run 7s var(--ease-out) infinite;
+}
+.motif--resume .resume__pulse { opacity: 0; animation: resume-pulse 7s linear infinite; }
+.motif--resume .resume__pulse circle { fill: var(--volt); }
+.motif--resume .resume__label {
+  font-size: 11px;
+  fill: var(--text-dim);
+  font-family: var(--font);
+  letter-spacing: 0.04em;
+}
+@keyframes resume-run {
+  0%   { stroke-dashoffset: 96; }
+  18%  { stroke-dashoffset: 58; }
+  30%  { stroke-dashoffset: 58; }  /* pause one: sleep */
+  58%  { stroke-dashoffset: 30; }
+  68%  { stroke-dashoffset: 30; }  /* pause two: network switch */
+  90%  { stroke-dashoffset: 0; }   /* complete */
+  100% { stroke-dashoffset: 0; }
+}
+@keyframes resume-pulse {
+  0%   { opacity: 0; translate: 0 0; }
+  18%  { opacity: 1; translate: -42px 0; }
+  30%  { opacity: 1; translate: -42px 0; }
+  58%  { opacity: 1; translate: -145px 0; }
+  68%  { opacity: 1; translate: -145px 0; }
+  90%  { opacity: 0; translate: -230px 0; }
+  100% { opacity: 0; }
+}
+
+/* Motif 3 — mesh: nodes linked, packets hopping the routes */
+.motif--mesh .mesh__link {
+  stroke: var(--line);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 5;
+}
+.motif--mesh .mesh__node { fill: var(--ink-2); stroke: var(--line); stroke-width: 1.5; }
+.motif--mesh .mesh__node--volt { fill: var(--volt); stroke: none; }
+.motif--mesh .mesh__packet { fill: var(--volt); offset-path: path("M62 108 L160 34 L258 108"); offset-rotate: 0deg; animation: mesh-hop 3.2s linear infinite; }
+.motif--mesh .mesh__packet--b { fill: var(--text-dim); offset-path: path("M258 108 L160 122 L62 108"); animation-duration: 4.1s; animation-delay: 0.9s; }
+@keyframes mesh-hop {
+  0%   { offset-distance: 0%; opacity: 0; }
+  8%   { opacity: 1; }
+  92%  { opacity: 1; }
+  100% { offset-distance: 100%; opacity: 0; }
+}
+
+/* Motif 4 — QR receive: modules in line-grey, two live, scan line sweeping */
+.motif--qr .qr__modules rect { fill: var(--line); }
+.motif--qr .qr__hot { fill: var(--volt); }
+.motif--qr .qr__finder rect { stroke: var(--text-dim); stroke-width: 3; }
+.motif--qr .qr__scan {
+  fill: var(--volt);
+  animation: qr-sweep 2.8s var(--ease-out) infinite;
+  filter: drop-shadow(0 0 6px oklch(0.90 0.19 105 / 0.6));
+}
+@keyframes qr-sweep {
+  0%   { transform: translateY(8px); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateY(136px); opacity: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   How it works — a real sequence, so it gets numbers
+   -------------------------------------------------------------------------- */
+.steps {
+  display: grid;
+  margin: var(--s8) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.step {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--s5);
+  align-items: start;
+  padding-block: var(--s5);
+}
+.step + .step { border-top: 1px solid var(--line); }
+
+.step__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r-pill);
+  color: var(--volt);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.step__title {
+  font-size: var(--fs-h3);
+  font-weight: 700;
+}
+.step__copy {
+  margin-top: var(--s2);
+  max-width: 52ch;
+}
+
+/* --------------------------------------------------------------------------
+   Benchmarks teaser — honest placeholders, no invented data
+   -------------------------------------------------------------------------- */
+.bench {
+  display: grid;
+  gap: var(--s4);
+  margin: var(--s8) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.bench__row {
+  display: grid;
+  grid-template-columns: minmax(9rem, 14rem) 1fr auto;
+  gap: var(--s4);
+  align-items: center;
+}
+.bench__scenario {
+  font-weight: 600;
+  color: var(--text-hi);
+  font-size: var(--fs-sm);
+}
+.bench__slot {
+  height: 2.4rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-tile);
+  background: repeating-linear-gradient(
+    -45deg,
+    oklch(0.22 0.012 250 / 0.6) 0 0.6rem,
+    transparent 0.6rem 1.2rem
+  );
+}
+.bench__soon {
+  font-size: var(--fs-xs);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.bench__note {
+  margin-top: var(--s5);
+  font-size: var(--fs-sm);
   color: var(--text-dim);
   max-width: 52ch;
 }
@@ -368,9 +668,37 @@ a { color: inherit; }
 /* --------------------------------------------------------------------------
    Small screens
    -------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .feature,
+  .feature--flip {
+    grid-template-columns: 1fr;
+    gap: var(--s5);
+    align-items: start;
+  }
+  .feature--flip .feature__body { order: 1; }
+  .feature--flip .feature__motif { order: 2; }
+  .feature__motif { max-width: 20rem; justify-self: start; }
+}
+
 @media (max-width: 640px) {
   .site-nav__link--ext { display: none; } /* GitHub stays in hero CTA + footer */
+  .site-nav__link[href="#features"] { display: none; }
   .hero__cta .btn { flex: 1 1 auto; }
+
+  .proof {
+    grid-template-columns: 1fr 1fr;
+  }
+  .proof__cell { padding-inline: 0; }
+  .proof__cell:nth-child(odd) { border-left: 0; padding-right: var(--s4); }
+  .proof__cell:nth-child(even) { padding-left: var(--s4); }
+  .proof__cell:nth-child(n+3) { border-top: 1px solid var(--line); }
+
+  .bench__row {
+    grid-template-columns: 1fr auto;
+  }
+  .bench__scenario { grid-column: 1; }
+  .bench__soon { grid-column: 2; grid-row: 1; }
+  .bench__slot { grid-column: 1 / -1; }
 }
 
 /* --------------------------------------------------------------------------
