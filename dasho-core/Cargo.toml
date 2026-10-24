@@ -1,0 +1,14 @@
+[package]
+name = "dasho-core"
+description = "Dasho transfer engine: discovery, encrypted QUIC transport, chunking, resume, receipts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true }

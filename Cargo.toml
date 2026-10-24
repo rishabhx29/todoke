@@ -1,0 +1,21 @@
+[workspace]
+resolver = "3"
+members = ["dasho-core", "dasho-cli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/dashoapp/dasho"
+rust-version = "1.85"
+
+[workspace.dependencies]
+dasho-core = { path = "dasho-core" }
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4", features = ["derive"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"
