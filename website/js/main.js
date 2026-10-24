@@ -43,6 +43,23 @@ var ASSETS = {
     revealed.forEach(function (el) { el.classList.add("is-in"); });
   }
 
+  /* Magnetic hover on primary buttons — small pull toward the cursor,
+     skipped for reduced motion and touch-only devices. */
+  var noMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+  if (!noMotion.matches && window.matchMedia("(hover: hover)").matches) {
+    document.querySelectorAll(".btn--primary").forEach(function (btn) {
+      btn.addEventListener("pointermove", function (e) {
+        var r = btn.getBoundingClientRect();
+        btn.style.setProperty("--mx", ((e.clientX - r.left - r.width / 2) * 0.18).toFixed(1) + "px");
+        btn.style.setProperty("--my", ((e.clientY - r.top - r.height / 2) * 0.3).toFixed(1) + "px");
+      });
+      btn.addEventListener("pointerleave", function () {
+        btn.style.setProperty("--mx", "0px");
+        btn.style.setProperty("--my", "0px");
+      });
+    });
+  }
+
   /* Downloads — hrefs come from the constants above, one config place. */
   var grid = document.getElementById("dl-grid");
   if (grid) {
