@@ -115,6 +115,11 @@ impl DeviceIdentity {
         self.key.verifying_key()
     }
 
+    /// The raw 32-byte Ed25519 seed (used to derive the TLS certificate key).
+    pub fn seed_bytes(&self) -> [u8; 32] {
+        self.key.to_bytes()
+    }
+
     /// Stable display fingerprint: first 128 bits of the public key as
     /// upper-case hex in `XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX` form.
     pub fn fingerprint(&self) -> String {

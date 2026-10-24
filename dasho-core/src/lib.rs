@@ -12,6 +12,7 @@
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub mod identity;
+pub mod transport;
 
 #[cfg(test)]
 mod tests {
