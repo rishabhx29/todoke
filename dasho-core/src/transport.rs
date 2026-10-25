@@ -221,9 +221,28 @@ pub async fn connect(
 }
 
 /// Convenience: a client endpoint bound to an ephemeral local port.
+///
+/// NOTE: a `quinn::Connection` is only usable while its endpoint's driver
+/// is alive — dropping the endpoint kills the connection ("connection
+/// lost"). Callers that create a one-off endpoint must keep it alive for
+/// as long as they use the connection. [`dial`] pairs the two for you.
 pub fn client_endpoint() -> Result<quinn::Endpoint, TransportError> {
     Ok(quinn::Endpoint::client(SocketAddr::from((
         [0, 0, 0, 0],
         0,
     )))?)
+}
+
+/// Connect to a peer and return BOTH the endpoint and the connection.
+///
+/// The endpoint must be kept alive (bound) for as long as the connection
+/// is used; see the note on [`client_endpoint`].
+pub async fn dial(
+    peer: SocketAddr,
+    expected_fingerprint: &str,
+    peer_cert: CertificateDer<'static>,
+) -> Result<(quinn::Endpoint, quinn::Connection), TransportError> {
+    let endpoint = client_endpoint()?;
+    let conn = connect(&endpoint, peer, expected_fingerprint, peer_cert).await?;
+    Ok((endpoint, conn))
 }

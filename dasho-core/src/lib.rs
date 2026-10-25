@@ -11,8 +11,12 @@
 /// Engine crate version, mirroring the Cargo manifest version.
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub mod chunk;
 pub mod discovery;
 pub mod identity;
+pub mod manifest;
+pub mod protocol;
+pub mod transfer;
 pub mod transport;
 
 #[cfg(test)]
