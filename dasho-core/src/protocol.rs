@@ -88,9 +88,13 @@ pub enum Message {
     /// Sender offers a manifest.
     Offer { manifest: Manifest },
     /// Receiver accepts and reports what it already has (resume).
+    ///
+    /// `streams` is how many data streams the receiver will accept for this
+    /// session; the sender opens `min(its own parallelism, streams)` of them.
     Accept {
         manifest_hash: String,
         have: Vec<HaveFile>,
+        streams: u32,
     },
     /// Sender believes everything outstanding was sent.
     Complete { manifest_hash: String },

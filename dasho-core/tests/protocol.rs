@@ -54,6 +54,7 @@ async fn every_message_kind_round_trips() {
                 file: 0,
                 chunks: vec![0, 3, 7],
             }],
+            streams: 4,
         },
         Message::Complete {
             manifest_hash: manifest.hash.clone(),
