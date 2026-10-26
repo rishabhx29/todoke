@@ -2,11 +2,11 @@
 
 use std::{fs, path::PathBuf};
 
-use dasho_core::{
+use tempfile::TempDir;
+use todoke_core::{
     chunk::{ChunkParams, EMPTY_BLAKE3},
     manifest::build_manifest,
 };
-use tempfile::TempDir;
 
 fn write(path: &PathBuf, bytes: &[u8]) {
     if let Some(parent) = path.parent() {
@@ -34,7 +34,7 @@ fn pseudo_bytes(seed: u64, len: usize) -> Vec<u8> {
 
 fn tree() -> TempDir {
     let dir = TempDir::new().unwrap();
-    write(&dir.path().join("docs/readme.txt"), b"hello dasho");
+    write(&dir.path().join("docs/readme.txt"), b"hello todoke");
     write(&dir.path().join("docs/empty.bin"), b"");
     write(
         &dir.path().join("media/video.dat"),
@@ -57,7 +57,7 @@ fn hash_is_content_addressed_not_location_addressed() {
     let a = build_manifest(&[first.path().join("docs")], &ChunkParams::default()).unwrap();
     // Same tree (same name, same content), different absolute location.
     let second = TempDir::new().unwrap();
-    write(&second.path().join("docs/readme.txt"), b"hello dasho");
+    write(&second.path().join("docs/readme.txt"), b"hello todoke");
     write(&second.path().join("docs/empty.bin"), b"");
     let b = build_manifest(&[second.path().join("docs")], &ChunkParams::default()).unwrap();
     assert_eq!(a.hash, b.hash, "location must not affect the manifest hash");
@@ -67,7 +67,7 @@ fn hash_is_content_addressed_not_location_addressed() {
 fn changed_content_changes_hash() {
     let a = build_manifest(&[tree().path().join("docs")], &ChunkParams::default()).unwrap();
     let changed = TempDir::new().unwrap();
-    write(&changed.path().join("readme.txt"), b"hello dasho!");
+    write(&changed.path().join("readme.txt"), b"hello todoke!");
     write(&changed.path().join("empty.bin"), b"");
     let b = build_manifest(&[changed.path()], &ChunkParams::default()).unwrap();
     assert_ne!(
@@ -108,7 +108,7 @@ fn single_file_input_lands_under_its_own_name() {
     .unwrap();
     assert_eq!(m.files.len(), 1);
     assert_eq!(m.files[0].path, "readme.txt");
-    assert_eq!(m.files[0].size, 11);
+    assert_eq!(m.files[0].size, 12);
 }
 
 #[test]

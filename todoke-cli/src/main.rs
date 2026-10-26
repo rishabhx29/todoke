@@ -1,10 +1,10 @@
-//! `dasho` — the command-line harness around the Dasho transfer engine.
+//! `todoke` — the command-line harness around the Todoke transfer engine.
 
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
 #[command(
-    name = "dasho",
+    name = "todoke",
     version,
     about = "Files that move. Fast, verifiable, restartable transfers between your devices."
 )]
@@ -19,7 +19,7 @@ enum Command {
     Serve,
     /// Send files or directories to a nearby device
     Send,
-    /// List Dasho devices discovered on the local network
+    /// List Todoke devices discovered on the local network
     Devices,
     /// Run benchmark scenarios against the engine
     Bench,
@@ -30,7 +30,7 @@ fn main() {
     match cli.command {
         Command::Serve | Command::Send | Command::Devices | Command::Bench => {
             eprintln!(
-                "error: `dasho {}` is not wired to the engine yet — it lands with the v1 engine milestone",
+                "error: `todoke {}` is not wired to the engine yet — it lands with the v1 engine milestone",
                 match cli.command {
                     Command::Serve => "serve",
                     Command::Send => "send",

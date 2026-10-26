@@ -2,14 +2,14 @@
 
 use std::{net::SocketAddr, time::Duration};
 
-use dasho_core::{
+use rustls::pki_types::CertificateDer;
+use todoke_core::{
     identity::DeviceIdentity,
     transport::{self},
 };
-use rustls::pki_types::CertificateDer;
 
 fn tmpdir(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("dasho-transport-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("todoke-transport-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -34,7 +34,7 @@ async fn spawn_echo_server(tag: &str) -> (String, SocketAddr, CertificateDer<'st
             };
             tokio::spawn(async move {
                 while let Ok((mut tx, mut rx)) = conn.accept_bi().await {
-                    let mut buf = [0u8; 5];
+                    let mut buf = [0u8; 6];
                     if rx.read_exact(&mut buf).await.is_ok() {
                         let _ = tx.write_all(&buf).await;
                         let _ = tx.finish();
@@ -56,11 +56,11 @@ async fn identity_verified_handshake_and_byte_exchange() {
         .expect("identity-verified connect");
 
     let (mut tx, mut rx) = conn.open_bi().await.expect("open_bi");
-    tx.write_all(b"dasho").await.expect("write");
+    tx.write_all(b"todoke").await.expect("write");
     tx.finish().expect("finish");
-    let mut echoed = [0u8; 5];
+    let mut echoed = [0u8; 6];
     rx.read_exact(&mut echoed).await.expect("read echo");
-    assert_eq!(&echoed, b"dasho");
+    assert_eq!(&echoed, b"todoke");
 }
 
 #[tokio::test]
@@ -79,11 +79,11 @@ async fn four_concurrent_connections() {
                 .await
                 .expect("connect");
             let (mut tx, mut rx) = conn.open_bi().await.expect("open_bi");
-            tx.write_all(&[b'a' + i; 5]).await.expect("write");
+            tx.write_all(&[b'a' + i; 6]).await.expect("write");
             tx.finish().expect("finish");
-            let mut echoed = [0u8; 5];
+            let mut echoed = [0u8; 6];
             rx.read_exact(&mut echoed).await.expect("read echo");
-            assert_eq!(echoed, [b'a' + i; 5]);
+            assert_eq!(echoed, [b'a' + i; 6]);
         }));
     }
     for t in tasks {

@@ -4,7 +4,7 @@
 //! Security model (deterministic identity certificates + TOFU pinning):
 //! - A device's TLS certificate is a pure function of its Ed25519 identity
 //!   key: fixed validity window, serial derived from the public key, SAN
-//!   `dasho-<fp8>.dasho.internal`, self-signed with the device key itself.
+//!   `todoke-<fp8>.todoke.internal`, self-signed with the device key itself.
 //! - The certificate travels out-of-band (discovery TXT chunks — wired in
 //!   ticket 04; callers here just pass the DER bytes).
 //! - A client pins the received certificate as its ONLY trust anchor after
@@ -28,8 +28,8 @@ use crate::identity::DeviceIdentity;
 const CERT_VALID_FROM: (i32, u8, u8) = (2026, 1, 1);
 const CERT_VALID_TO: (i32, u8, u8) = (2099, 1, 1);
 
-/// DNS suffix for device SANs; full name: `dasho-<fp8>.dasho.internal`.
-const SAN_SUFFIX: &str = "dasho.internal";
+/// DNS suffix for device SANs; full name: `todoke-<fp8>.todoke.internal`.
+const SAN_SUFFIX: &str = "todoke.internal";
 
 #[derive(Debug, thiserror::Error)]
 pub enum TransportError {
@@ -53,7 +53,7 @@ pub enum TransportError {
 pub fn device_dns_name(fingerprint: &str) -> String {
     let compact: String = fingerprint.chars().filter(|c| *c != '-').collect();
     let head: String = compact.chars().take(16).collect::<String>().to_lowercase();
-    format!("dasho-{head}.{SAN_SUFFIX}")
+    format!("todoke-{head}.{SAN_SUFFIX}")
 }
 
 /// Build the rcgen key pair for a device identity from its raw Ed25519 seed,

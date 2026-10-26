@@ -10,9 +10,9 @@ fn main() {
         ("fp", "AAAABBBB-CCCCDDDD-EEEEFFFF-00001111"),
     ];
     let service = mdns_sd::ServiceInfo::new(
-        "_dasho._udp.local.",
+        "_todoke._udp.local.",
         "Probe",
-        "dasho-probe.local.",
+        "todoke-probe.local.",
         "127.0.0.1",
         45999,
         props.as_slice(),
@@ -21,7 +21,7 @@ fn main() {
     daemon.register(service).expect("register");
     println!("registered");
 
-    let receiver = daemon.browse("_dasho._udp.local.").expect("browse");
+    let receiver = daemon.browse("_todoke._udp.local.").expect("browse");
     println!("browsing for 8s...");
     let deadline = Instant::now() + Duration::from_secs(8);
     let mut seen: HashMap<String, String> = HashMap::new();
@@ -57,6 +57,6 @@ fn main() {
         }
     }
     println!("RESULT: {seen:?}");
-    let _ = daemon.stop_browse("_dasho._udp.local.");
-    let _ = daemon.unregister("Probe._dasho._udp.local.");
+    let _ = daemon.stop_browse("_todoke._udp.local.");
+    let _ = daemon.unregister("Probe._todoke._udp.local.");
 }

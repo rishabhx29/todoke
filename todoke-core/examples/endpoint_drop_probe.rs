@@ -1,7 +1,7 @@
 //! Probe: does a quinn connection survive its client endpoint being dropped?
-use dasho_core::{identity::DeviceIdentity, transport};
 use rustls::pki_types::CertificateDer;
 use tempfile::TempDir;
+use todoke_core::{identity::DeviceIdentity, transport};
 
 #[tokio::main]
 async fn main() {

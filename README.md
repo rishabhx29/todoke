@@ -1,10 +1,10 @@
-# Dasho
+# Todoke
 
 **Files that move.** A free, open-source, cross-platform desktop app for sharing anything — files, folders, videos, whole drives — between devices at local-network speed, with no cloud, no compression, and no size limits.
 
 ## Why
 
-Existing tools fail at one of: speed (single-stream transfers waste the link), reliability (no resume across sleep/network changes), trust (closed-source after the SHAREit era), or reach (no way to receive without installing). Dasho targets all four.
+Existing tools fail at one of: speed (single-stream transfers waste the link), reliability (no resume across sleep/network changes), trust (closed-source after the SHAREit era), or reach (no way to receive without installing). Todoke targets all four.
 
 ## Positioning
 
@@ -18,11 +18,11 @@ Existing tools fail at one of: speed (single-stream transfers waste the link), r
 
 | Asset | Status |
 |---|---|
-| `dasho.tech` | primary domain — to register |
-| `dasho.web.id` / `dasho.my.id` | defensive — to register |
-| GitHub `dashoapp` | available — to claim |
-| npm org `dasho` / package `dasho-cli` | `dasho` is a dormant personal lib; use org or `-cli` |
-| X `@dasho` | check manually before launch |
+| `todoke.tech` | primary domain — to register |
+| `todoke.web.id` / `todoke.my.id` | defensive — to register |
+| GitHub `todokeapp` | available — to claim |
+| npm org `todoke` / package `todoke-cli` | `todoke` is a dormant personal lib; use org or `-cli` |
+| X `@todoke` | check manually before launch |
 
 ## Stack (see [docs/decisions.md](docs/decisions.md) for rationale)
 

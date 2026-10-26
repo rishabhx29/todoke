@@ -16,7 +16,7 @@ pub const EMPTY_BLAKE3: &str = "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7
 /// Content-defined chunking parameters.
 ///
 /// Rationale for the defaults (16 KiB min / 64 KiB avg / 256 KiB max):
-/// Dasho's workload is large media on fast LANs (Wi-Fi 6 / Ethernet), where
+/// Todoke's workload is large media on fast LANs (Wi-Fi 6 / Ethernet), where
 /// 64 KiB average chunks amortize QUIC stream-write overhead while keeping
 /// dedup and resume granularity fine enough that a lost connection costs at
 /// most a few hundred KiB of re-transfer. The 16 KiB floor avoids tiny chunks

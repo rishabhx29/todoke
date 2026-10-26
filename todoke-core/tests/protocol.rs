@@ -3,7 +3,8 @@
 
 use std::io::Cursor;
 
-use dasho_core::{
+use tempfile::TempDir;
+use todoke_core::{
     chunk::{ChunkInfo, ChunkParams},
     manifest::{FileEntry, Manifest, Receipt, ReceiptFile, build_manifest},
     protocol::{
@@ -11,7 +12,6 @@ use dasho_core::{
         write_data_frame, write_message,
     },
 };
-use tempfile::TempDir;
 use tokio::io::duplex;
 
 fn sample_manifest() -> Manifest {

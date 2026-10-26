@@ -2,7 +2,7 @@
 
 use std::io::Cursor;
 
-use dasho_core::chunk::{ChunkParams, chunk_reader, hash_reader};
+use todoke_core::chunk::{ChunkParams, chunk_reader, hash_reader};
 
 /// Deterministic pseudo-random bytes (splitmix64) so tests never depend on
 /// entropy; a plain LCG's top byte is too structured for content-defined

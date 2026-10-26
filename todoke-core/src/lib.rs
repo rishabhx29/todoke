@@ -1,11 +1,11 @@
-//! Dasho transfer engine.
+//! Todoke transfer engine.
 //!
-//! `dasho-core` implements the headless transfer engine behind the Dasho app:
+//! `todoke-core` implements the headless transfer engine behind the Todoke app:
 //! LAN device discovery, identity and trust, encrypted QUIC transport,
 //! content-defined chunking, manifests, parallel multi-file transfers,
 //! resume across reconnects, and verification receipts.
 //!
-//! This crate is a library first: the CLI (`dasho-cli`) and the future GUI
+//! This crate is a library first: the CLI (`todoke-cli`) and the future GUI
 //! both consume its public async API.
 
 /// Engine crate version, mirroring the Cargo manifest version.

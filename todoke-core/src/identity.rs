@@ -1,5 +1,5 @@
 //! Device identity: an Ed25519 keypair with a human-friendly name, persisted
-//! in the Dasho app-data directory, plus the trust-on-first-use peer store.
+//! in the Todoke app-data directory, plus the trust-on-first-use peer store.
 //!
 //! Layout inside the app dir:
 //! - `device.key` — 32-byte raw Ed25519 seed (0600 on unix)
@@ -48,7 +48,7 @@ struct IdentityMeta {
     key_check: String,
 }
 
-/// A Dasho device identity.
+/// A Todoke device identity.
 #[derive(Debug)]
 pub struct DeviceIdentity {
     dir: PathBuf,
@@ -84,7 +84,7 @@ impl DeviceIdentity {
             meta
         } else {
             let meta = IdentityMeta {
-                name: format!("dasho-{}", check[..4].to_lowercase()),
+                name: format!("todoke-{}", check[..4].to_lowercase()),
                 created_at_unix: unix_now(),
                 key_check: check,
             };

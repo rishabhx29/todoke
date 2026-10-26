@@ -7,14 +7,14 @@
 
 use std::time::Duration;
 
-use dasho_core::{
+use todoke_core::{
     discovery::{self, DeviceRecord, DiscoveryError},
     identity::DeviceIdentity,
     transport,
 };
 
 fn tmpdir(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("dasho-discovery-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("todoke-discovery-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir

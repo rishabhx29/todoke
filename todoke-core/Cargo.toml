@@ -1,6 +1,6 @@
 [package]
-name = "dasho-core"
-description = "Dasho transfer engine: discovery, encrypted QUIC transport, chunking, resume, receipts"
+name = "todoke-core"
+description = "Todoke transfer engine: discovery, encrypted QUIC transport, chunking, resume, receipts"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

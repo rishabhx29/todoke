@@ -4,7 +4,9 @@
 
 use std::{fs, path::Path, path::PathBuf, time::Duration};
 
-use dasho_core::{
+use rustls::pki_types::CertificateDer;
+use tempfile::TempDir;
+use todoke_core::{
     chunk::{ChunkParams, hash_reader},
     identity::DeviceIdentity,
     manifest::build_manifest,
@@ -12,8 +14,6 @@ use dasho_core::{
     transfer::{self, ReceiveOptions, SendOptions, SenderInfo, TransferError, TransferEvent},
     transport,
 };
-use rustls::pki_types::CertificateDer;
-use tempfile::TempDir;
 use tokio::sync::mpsc;
 
 fn pseudo_bytes(seed: u64, len: usize) -> Vec<u8> {
@@ -32,7 +32,7 @@ fn pseudo_bytes(seed: u64, len: usize) -> Vec<u8> {
 }
 
 fn tmpdir(tag: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("dasho-multi-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("todoke-multi-{tag}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir
@@ -50,7 +50,7 @@ async fn spawn_receiver(
     opts: ReceiveOptions,
 ) -> (
     Peer,
-    tokio::task::JoinHandle<Result<dasho_core::manifest::Receipt, TransferError>>,
+    tokio::task::JoinHandle<Result<todoke_core::manifest::Receipt, TransferError>>,
 ) {
     let id = DeviceIdentity::load_or_create(&tmpdir(tag)).unwrap();
     let server_id = transport::server_identity(&id).unwrap();

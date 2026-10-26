@@ -1,6 +1,6 @@
 //! LAN device discovery over mDNS (mdns-sd).
 //!
-//! Every Dasho device advertises `_dasho._udp.local.` with TXT records
+//! Every Todoke device advertises `_todoke._udp.local.` with TXT records
 //! carrying its name, identity fingerprint, and certificate chunks (the
 //! certificate is what the transport layer pins; the fingerprint is what
 //! the trust store checks). Browsing yields typed [`DeviceRecord`]s — no
@@ -15,8 +15,8 @@ use std::{
 
 use mdns_sd::{ServiceDaemon, ServiceEvent, ServiceInfo};
 
-/// mDNS service type Dasho devices advertise.
-pub const SERVICE_TYPE: &str = "_dasho._udp.local.";
+/// mDNS service type Todoke devices advertise.
+pub const SERVICE_TYPE: &str = "_todoke._udp.local.";
 
 /// Longest certificate base64 chunk that fits mdns-sd's 255-byte TXT limit
 /// (`len(key + value) < u8::MAX`), with headroom for the key name.
@@ -37,7 +37,7 @@ pub enum DiscoveryError {
     BadCertificate,
 }
 
-/// A nearby Dasho device, fully typed.
+/// A nearby Todoke device, fully typed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DeviceRecord {
     pub name: String,
@@ -123,7 +123,7 @@ impl Advertiser {
         )?;
 
         let host = format!(
-            "dasho-{}.local.",
+            "todoke-{}.local.",
             &identity.fingerprint().to_lowercase().replace('-', "")[..12]
         );
         let info = ServiceInfo::new(
@@ -195,7 +195,7 @@ fn txt_properties(
     Ok(props)
 }
 
-/// Browse the LAN for Dasho devices until `timeout` elapses (wall clock),
+/// Browse the LAN for Todoke devices until `timeout` elapses (wall clock),
 /// returning deduplicated, validated records in first-seen order.
 ///
 /// The blocking mDNS receive loop runs on a dedicated thread.

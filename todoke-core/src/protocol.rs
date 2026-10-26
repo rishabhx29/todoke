@@ -1,4 +1,4 @@
-//! The Dasho transfer protocol: length-prefixed JSON control messages in a
+//! The Todoke transfer protocol: length-prefixed JSON control messages in a
 //! versioned envelope, plus compact binary framing for chunk data.
 //!
 //! Wire format:
@@ -7,7 +7,7 @@
 //!   `u32 BE chunk index` + `u64 BE payload length` + payload bytes.
 //!
 //! Unknown message types and unknown versions are rejected cleanly (typed
-//! errors, connection closed with a reason) so two different Dasho versions
+//! errors, connection closed with a reason) so two different Todoke versions
 //! fail loudly instead of misinterpreting each other.
 
 use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
@@ -38,7 +38,7 @@ pub enum ProtocolError {
     MessageTooLarge(u32),
     #[error("peer speaks protocol version {0}, we speak {PROTOCOL_VERSION}")]
     UnsupportedVersion(u32),
-    #[error("peer sent an unknown message type (different Dasho version?)")]
+    #[error("peer sent an unknown message type (different Todoke version?)")]
     UnknownMessage,
     #[error("data frame version {0} is not supported")]
     FrameVersion(u8),

@@ -1,10 +1,10 @@
 //! Ticket 02 acceptance tests: identity generate/load round-trip, naming,
 //! signing, trust store round-trip, mismatch detection, corruption safety.
 
-use dasho_core::identity::{DeviceIdentity, IdentityError, TrustError, TrustStore};
+use todoke_core::identity::{DeviceIdentity, IdentityError, TrustError, TrustStore};
 
 fn tmpdir(tag: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("dasho-identity-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("todoke-identity-{tag}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -38,7 +38,7 @@ fn two_devices_have_different_fingerprints() {
 fn sign_and_verify_roundtrip_and_tamper_detection() {
     let dir = tmpdir("sign");
     let id = DeviceIdentity::load_or_create(&dir).unwrap();
-    let msg = b"dasho hello";
+    let msg = b"todoke hello";
     let sig = id.sign(msg);
     assert!(DeviceIdentity::verify(&id.public_key(), msg, &sig));
     assert!(!DeviceIdentity::verify(&id.public_key(), b"tampered", &sig));

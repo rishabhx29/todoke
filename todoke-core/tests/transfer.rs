@@ -9,7 +9,9 @@ use std::{
     time::Duration,
 };
 
-use dasho_core::{
+use rustls::pki_types::CertificateDer;
+use tempfile::TempDir;
+use todoke_core::{
     chunk::{ChunkParams, EMPTY_BLAKE3, hash_reader},
     identity::DeviceIdentity,
     manifest::{Manifest, Receipt, build_manifest},
@@ -17,8 +19,6 @@ use dasho_core::{
     transfer::{self, ReceiveOptions, SenderInfo, TransferError},
     transport::{self, Transport},
 };
-use rustls::pki_types::CertificateDer;
-use tempfile::TempDir;
 
 /// Deterministic pseudo-random bytes (splitmix64) so tests never depend on
 /// entropy; content-defined chunking needs varied data to cut realistically.
@@ -38,7 +38,7 @@ fn pseudo_bytes(seed: u64, len: usize) -> Vec<u8> {
 }
 
 fn tmpdir(tag: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("dasho-transfer-{tag}-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("todoke-transfer-{tag}-{}", std::process::id()));
     let _ = fs::remove_dir_all(&dir);
     fs::create_dir_all(&dir).unwrap();
     dir
