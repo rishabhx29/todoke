@@ -19,9 +19,14 @@
 use std::{fmt, net::SocketAddr, sync::Arc, time::Duration};
 
 use quinn::{RecvStream, SendStream};
-use rustls::pki_types::{CertificateDer, PrivatePkcs8KeyDer};
+pub use rustls::pki_types::CertificateDer;
+use rustls::pki_types::PrivatePkcs8KeyDer;
 
 use crate::identity::DeviceIdentity;
+
+/// How long a connection handshake may take before we give up (quinn
+/// otherwise retries forever against an unreachable/firewalled peer).
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Fixed validity window for identity certificates. Dates are fixed (not
 /// clock-derived) so the certificate is fully determined by the key.
@@ -243,6 +248,15 @@ pub async fn dial(
     peer_cert: CertificateDer<'static>,
 ) -> Result<(quinn::Endpoint, quinn::Connection), TransportError> {
     let endpoint = client_endpoint()?;
-    let conn = connect(&endpoint, peer, expected_fingerprint, peer_cert).await?;
+    // Bounded handshake: an unreachable/firewalled peer must fail fast with
+    // guidance, not retry forever (quinn connects indefinitely otherwise).
+    let conn = tokio::time::timeout(
+        CONNECT_TIMEOUT,
+        connect(&endpoint, peer, expected_fingerprint, peer_cert),
+    )
+    .await
+    .map_err(|_| TransportError::Connect(format!(
+        "no response from {peer} within 10s — is the device running `todoke serve`, and is UDP allowed through the firewall?"
+    )))??;
     Ok((endpoint, conn))
 }

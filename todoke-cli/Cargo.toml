@@ -15,6 +15,11 @@ path = "src/main.rs"
 todoke-core = { workspace = true }
 clap = { workspace = true }
 tokio = { workspace = true }
+dirs = "7.0.0"
+indicatif = "0.18.6"
+base64.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 assert_cmd = "2"
+serde_json = { workspace = true }
