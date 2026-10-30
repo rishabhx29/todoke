@@ -46,3 +46,9 @@ Log of decisions made during research and planning (2026-10). Sources and full c
 5. Pairing/QR + mesh (Iroh)
 6. No-install web receiver + portable exe
 7. Later: cable mode, multipath bonding, mobile
+
+## Rename: Dasho -> Todoke (2026-10-27)
+
+- **New name: Todoke** (届け/届く, "it arrives / deliver!") — chosen by the owner's brief (Japanese, product-resembling, cool-sounding, .tech free). Meaning aligns with the trust story: files that ARRIVE, verified by receipts. Runner-up considered: Shiden (紫電, purple lightning).
+- **Verified free at decision time**: todoke.tech, todoke.web.id (RDAP via radix.host — note rdap.nic.tech serves HTML, calibrate against the IANA bootstrap); GitHub `todokeapp`, npm `todoke-cli`.
+- Renamed: crates (todoke-core/todoke-cli), binary (`todoke`), mDNS service type (`_todoke._udp.local.`), TLS SAN suffix (`todoke.internal`), app-data dir, website copy/domain. Physical worktree paths (C:\Rishabh\dasho-app / dasho-website) and branch names (app/website) are unchanged for tooling stability. Historical docs saying "Dasho" mean Todoke.
