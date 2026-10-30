@@ -1657,6 +1657,7 @@ dependencies = [
  "clap",
  "dirs",
  "indicatif",
+ "serde",
  "serde_json",
  "todoke-core",
  "tokio",

@@ -13,6 +13,8 @@ use clap::{Parser, Subcommand};
 use todoke_core::transport::CertificateDer;
 use tokio::sync::mpsc;
 
+mod bench;
+
 use todoke_core::{
     discovery::{self, DeviceRecord},
     identity::DeviceIdentity,
@@ -190,9 +192,24 @@ fn main() {
             json,
         } => serve(target, staging, name, parallelism, advertise_ip, json),
         Command::Bench { scenario, output } => {
-            let _ = (scenario, output);
-            eprintln!("error: `todoke bench` lands with the benchmark harness (engine ticket 09)");
-            std::process::exit(2);
+            // Small default so a smoke run is seconds; real published runs
+            // pass --size-mb 256+.
+            let size_mb: u64 = std::env::var("TODOKE_BENCH_SIZE_MB")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(64);
+            match bench::run(scenario.as_deref(), size_mb) {
+                Ok(report) => {
+                    if let Err(e) = bench::write_output(&report, output.as_deref()) {
+                        eprintln!("error: writing results: {e}");
+                        std::process::exit(1);
+                    }
+                }
+                Err(e) => {
+                    eprintln!("error: {e}");
+                    std::process::exit(1);
+                }
+            }
         }
     }
 }
