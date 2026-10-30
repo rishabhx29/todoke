@@ -4,7 +4,7 @@ Log of decisions made during research and planning (2026-10). Sources and full c
 
 ## Product
 
-- **Name:** Dasho. Chosen for: sounds fast, one clean word, no trademark shadows, all four target domains free at standard price, playful-but-professional tone for a student/20s audience on X/Reddit/Discord.
+- **Name:** Todoke. Chosen for: sounds fast, one clean word, no trademark shadows, all four target domains free at standard price, playful-but-professional tone for a student/20s audience on X/Reddit/Discord.
 - **Shape:** "The engine" — fastest transfer + unkillable reliability + your-devices mesh — with the no-install web receiver embedded. Desktop-first (Windows/macOS/Linux); mobile later.
 - **Free, entirely, forever:** serverless-first architecture (mDNS discovery, P2P hole-punching, no accounts, no file-touching servers) makes free sustainable. Running cost target: ~$25/mo + $99/yr.
 

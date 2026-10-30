@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * snap.mjs — headless Chrome probe for the Dasho site (zero deps, Node 22+).
+ * snap.mjs — headless Chrome probe for the Todoke site (zero deps, Node 22+).
  *
  *   node tools/snap.mjs 360,740 out.png [--reduced-motion] [--console] [--full]
  *
@@ -53,7 +53,7 @@ await new Promise((r) => site.listen(SITE_PORT, "127.0.0.1", r));
 const chrome = spawn(CHROME, [
   "--headless=new", "--disable-gpu", "--no-sandbox", "--no-first-run",
   `--remote-debugging-port=${CDP_PORT}`,
-  "--user-data-dir=" + path.join(os.tmpdir(), "dasho-snap-profile"),
+  "--user-data-dir=" + path.join(os.tmpdir(), "todoke-snap-profile"),
   "about:blank",
 ], { stdio: "ignore" });
 

@@ -1,6 +1,6 @@
-# dasho.tech
+# todoke.tech
 
-The dasho.tech landing site. Zero-build static: semantic HTML, vanilla CSS, a little vanilla JS. No framework, no bundler, no CDN — point any static host at this directory and it ships.
+The todoke.tech landing site. Zero-build static: semantic HTML, vanilla CSS, a little vanilla JS. No framework, no bundler, no CDN — point any static host at this directory and it ships.
 
 **Files that move.** Free, open-source, cross-platform file sharing.
 
@@ -43,7 +43,7 @@ The checker exits non-zero on errors, so it can gate commits or CI later.
 Everything lives in one block at the top of `js/main.js`:
 
 ```js
-var RELEASES = "https://github.com/dashoapp/dasho/releases";
+var RELEASES = "https://github.com/todokeapp/todoke/releases";
 var LAUNCHED = false;
 var ASSETS = { windows: "...", macos: "...", linux: "..." };
 ```
@@ -54,7 +54,7 @@ var ASSETS = { windows: "...", macos: "...", linux: "..." };
    `releases/latest/download/<file>` links. Left as placeholders, buttons
    land on the latest-release page instead.
 3. Different org/repo? Change `RELEASES` and the few hardcoded GitHub URLs
-   in `index.html` (header, hero, trust, footer) — search for `dashoapp`.
+   in `index.html` (header, hero, trust, footer) — search for `todokeapp`.
 
 Pre-launch, the buttons are placeholder anchors (no href): they render but
 nothing links to a 404. The waitlist CTA is a mailto — swap in a form-service
@@ -89,12 +89,12 @@ No build step. Two known-good options:
 
 1. Create a Pages project → "Direct Upload".
 2. Upload the contents of this `website/` directory (not the repo root).
-3. Set the custom domain `dasho.tech` in the Pages project settings.
+3. Set the custom domain `todoke.tech` in the Pages project settings.
 
 **GitHub Pages**
 
 1. Repo → Settings → Pages → Source: branch `website`, folder `/website`.
-2. Custom domain: `dasho.tech`; enforce HTTPS once the DNS check passes.
+2. Custom domain: `todoke.tech`; enforce HTTPS once the DNS check passes.
 
 Any other static server (nginx, `python -m http.server`, Netlify drop) works the same way: serve this directory as the site root.
 

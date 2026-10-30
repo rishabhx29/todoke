@@ -1,4 +1,4 @@
-/* Dasho — dasho.tech
+/* Todoke — todoke.tech
    Progressive enhancement only: the page is complete without it.
 
    ── EDIT HERE ON LAUNCH DAY ─────────────────────────────────────────
@@ -10,12 +10,12 @@
    Pre-launch, the buttons are placeholder anchors (no href) and the
    tiles say "coming with v1" — nothing links to a 404.
    ─────────────────────────────────────────────────────────────────── */
-var RELEASES = "https://github.com/dashoapp/dasho/releases";
+var RELEASES = "https://github.com/todokeapp/todoke/releases";
 var LAUNCHED = false;
 var ASSETS = {
-  windows: "Dasho_<version>_x64-setup.exe",
-  macos:   "Dasho_<version>_universal.dmg",
-  linux:   "Dasho_<version>_amd64.AppImage",
+  windows: "Todoke_<version>_x64-setup.exe",
+  macos:   "Todoke_<version>_universal.dmg",
+  linux:   "Todoke_<version>_amd64.AppImage",
 };
 
 (function () {

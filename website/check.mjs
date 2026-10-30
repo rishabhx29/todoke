@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Dasho site checker — zero-dependency verification seam.
+ * Todoke site checker — zero-dependency verification seam.
  *
  *   node check.mjs            serve site + run all checks (exit 1 on error)
  *   node check.mjs --serve    serve site only (for browsing / Lighthouse)
@@ -45,9 +45,9 @@ const MIME = {
 
 /* External URLs allowed to 404 pre-launch (annotated in tickets) */
 const ALLOWED_404 = [
-  /^https:\/\/dasho\.tech\/?(#.*)?$/,                // own canonical — DNS not live yet
-  /^https:\/\/github\.com\/dashoapp\/dasho(\/|$)/,   // repo not created yet
-  /^https:\/\/github\.com\/dashoapp\/dasho\/releases/,
+  /^https:\/\/todoke\.tech\/?(#.*)?$/,                // own canonical — DNS not live yet
+  /^https:\/\/github\.com\/todokeapp\/todoke(\/|$)/,   // repo not created yet
+  /^https:\/\/github\.com\/todokeapp\/todoke\/releases/,
 ];
 
 const VOID = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input",

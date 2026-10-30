@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dasho.tech/sitemap.xml
+Sitemap: https://todoke.tech/sitemap.xml

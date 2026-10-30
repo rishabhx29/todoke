@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Dasho — dasho.tech
+   Todoke — todoke.tech
    Dark asphalt canvas, one volt accent, lane-dash dividers.
    Tokens first; everything reads from them.
    ========================================================================== */
@@ -162,7 +162,7 @@ a { color: inherit; }
 }
 
 /* --------------------------------------------------------------------------
-   Wordmark — lowercase “dasho” + volt dash
+   Wordmark — lowercase “todoke” + volt dash
    -------------------------------------------------------------------------- */
 .wordmark {
   display: inline-flex;
@@ -478,7 +478,7 @@ a { color: inherit; }
   --lane-d: 1.5s;
 }
 @keyframes lane-dash {
-  to { stroke-dashoffset: -38; } /* one dash+gap period, seamless loop */
+  to { stroke-todokeffset: -38; } /* one dash+gap period, seamless loop */
 }
 
 /* Motif 2 — resume: progress interrupted twice, then completes */
@@ -492,7 +492,7 @@ a { color: inherit; }
   stroke-width: 4;
   stroke-linecap: round;
   stroke-dasharray: 100;
-  stroke-dashoffset: 55; /* static fallback: mid-transfer */
+  stroke-todokeffset: 55; /* static fallback: mid-transfer */
   transform-origin: 8px 75px;
   animation: resume-run 7s var(--ease-out) infinite;
 }
@@ -505,13 +505,13 @@ a { color: inherit; }
   letter-spacing: 0.04em;
 }
 @keyframes resume-run {
-  0%   { stroke-dashoffset: 96; }
-  18%  { stroke-dashoffset: 58; }
-  30%  { stroke-dashoffset: 58; }  /* pause one: sleep */
-  58%  { stroke-dashoffset: 30; }
-  68%  { stroke-dashoffset: 30; }  /* pause two: network switch */
-  90%  { stroke-dashoffset: 0; }   /* complete */
-  100% { stroke-dashoffset: 0; }
+  0%   { stroke-todokeffset: 96; }
+  18%  { stroke-todokeffset: 58; }
+  30%  { stroke-todokeffset: 58; }  /* pause one: sleep */
+  58%  { stroke-todokeffset: 30; }
+  68%  { stroke-todokeffset: 30; }  /* pause two: network switch */
+  90%  { stroke-todokeffset: 0; }   /* complete */
+  100% { stroke-todokeffset: 0; }
 }
 @keyframes resume-pulse {
   0%   { opacity: 0; translate: 0 0; }
