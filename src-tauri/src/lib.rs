@@ -43,6 +43,7 @@ pub fn run() {
             commands::receive_status,
             commands::get_receive_target,
             commands::set_receive_target,
+            commands::stat_paths,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Todoke");

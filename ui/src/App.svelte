@@ -3,26 +3,29 @@
   import Send from "./lib/screens/Send.svelte";
   import Receive from "./lib/screens/Receive.svelte";
   import Settings from "./lib/screens/Settings.svelte";
+  import { app, go, refreshIdentity, refreshReceive, wireGlobalEvents } from "./lib/state.svelte";
 
-  type Screen = "devices" | "send" | "receive" | "settings";
-
-  let screen = $state<Screen>("devices");
-
-  const nav: { id: Screen; label: string }[] = [
+  const nav: { id: typeof app.screen; label: string }[] = [
     { id: "devices", label: "Devices" },
     { id: "send", label: "Send" },
     { id: "receive", label: "Receive" },
     { id: "settings", label: "Settings" },
   ];
 
+  $effect(() => {
+    void refreshIdentity();
+    void refreshReceive();
+    return wireGlobalEvents();
+  });
+
   function onRailKeydown(e: KeyboardEvent) {
-    const idx = nav.findIndex((n) => n.id === screen);
+    const idx = nav.findIndex((n) => n.id === app.screen);
     if (e.key === "ArrowDown" || e.key === "ArrowRight") {
       e.preventDefault();
-      screen = nav[(idx + 1) % nav.length].id;
+      go(nav[(idx + 1) % nav.length].id);
     } else if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
       e.preventDefault();
-      screen = nav[(idx - 1 + nav.length) % nav.length].id;
+      go(nav[(idx - 1 + nav.length) % nav.length].id);
     }
   }
 </script>
@@ -33,20 +36,25 @@
       <span class="wordmark">todoke</span>
       <span class="tagline">it arrives</span>
     </div>
-    <nav class="rail-nav" aria-label="Screens" keydown={onRailKeydown}>
+    <nav class="rail-nav" aria-label="Screens">
       {#each nav as item (item.id)}
         <button
           type="button"
           class="nav-item"
-          class:active={screen === item.id}
-          aria-current={screen === item.id ? "page" : undefined}
-          onclick={() => (screen = item.id)}
+          class:active={app.screen === item.id}
+          aria-current={app.screen === item.id ? "page" : undefined}
+          onclick={() => go(item.id)}
+          onkeydown={onRailKeydown}
         >
           {item.label}
+          {#if item.id === "receive" && app.receive.on}
+            <span class="dot" title="Receive is on" aria-label="Receive is on"></span>
+          {/if}
         </button>
       {/each}
     </nav>
     <div class="rail-foot">
+      <p class="who">{app.identity?.name ?? "…"}</p>
       <p class="foot-note">No accounts. No telemetry.</p>
     </div>
   </aside>
@@ -54,11 +62,11 @@
   <div class="lane" aria-hidden="true"></div>
 
   <main class="content">
-    {#if screen === "devices"}
+    {#if app.screen === "devices"}
       <Devices />
-    {:else if screen === "send"}
+    {:else if app.screen === "send"}
       <Send />
-    {:else if screen === "receive"}
+    {:else if app.screen === "receive"}
       <Receive />
     {:else}
       <Settings />
@@ -110,6 +118,9 @@
   }
 
   .nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
     text-align: left;
     padding: var(--s2) var(--s3);
     border-radius: var(--r-tile);
@@ -131,9 +142,39 @@
     font-weight: 640;
   }
 
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--volt);
+    animation: breathe 2.4s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.35;
+    }
+  }
+
   .rail-foot {
     margin-top: auto;
     padding: 0 var(--s3);
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .who {
+    color: var(--text);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .foot-note {

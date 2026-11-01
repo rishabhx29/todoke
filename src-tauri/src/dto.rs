@@ -175,3 +175,12 @@ pub struct ReceiveStatusDto {
     pub port: Option<u16>,
     pub target: Option<String>,
 }
+
+/// Size/count summary of send inputs (`stat_paths`).
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PathsStatsDto {
+    pub files: u64,
+    pub total_bytes: u64,
+    pub skipped: u64,
+}

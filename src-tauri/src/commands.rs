@@ -25,7 +25,9 @@ use todoke_core::{
 };
 
 use crate::{
-    dto::{DeviceDto, IdentityDto, IncomingDto, ReceiptDto, ReceiveStatusDto, SendEvent},
+    dto::{
+        DeviceDto, IdentityDto, IncomingDto, PathsStatsDto, ReceiptDto, ReceiveStatusDto, SendEvent,
+    },
     state::{EngineMutex, EngineState, ReceiveHandle, SendHandle},
 };
 
@@ -406,4 +408,67 @@ pub async fn set_receive_target(
     std::fs::create_dir_all(&path).map_err(|e| format!("target dir {}: {e}", path.display()))?;
     st.target_dir = path;
     Ok(receive_status_dto(&st))
+}
+
+/// Recursive size/count summary of send inputs (dirs walked like the
+/// manifest builder would). Best effort per entry: unreadable files are
+/// reported in `skipped` instead of failing the whole call. Runs on the
+/// blocking pool — large trees must not stall an async worker.
+#[tauri::command]
+pub async fn stat_paths(paths: Vec<String>) -> Result<PathsStatsDto, String> {
+    if paths.is_empty() {
+        return Err("no paths given".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut files: u64 = 0;
+        let mut bytes: u64 = 0;
+        let mut skipped: u64 = 0;
+        fn walk(
+            p: &std::path::Path,
+            files: &mut u64,
+            bytes: &mut u64,
+            skipped: &mut u64,
+            depth: u32,
+        ) {
+            if depth > 64 {
+                *skipped += 1;
+                return;
+            }
+            let meta = match std::fs::symlink_metadata(p) {
+                Ok(m) => m,
+                Err(_) => {
+                    *skipped += 1;
+                    return;
+                }
+            };
+            if meta.is_dir() {
+                let Ok(entries) = std::fs::read_dir(p) else {
+                    *skipped += 1;
+                    return;
+                };
+                for entry in entries.flatten() {
+                    walk(&entry.path(), files, bytes, skipped, depth + 1);
+                }
+            } else {
+                *files += 1;
+                *bytes += meta.len();
+            }
+        }
+        for raw in &paths {
+            walk(
+                std::path::Path::new(raw),
+                &mut files,
+                &mut bytes,
+                &mut skipped,
+                0,
+            );
+        }
+        Ok(PathsStatsDto {
+            files,
+            total_bytes: bytes,
+            skipped,
+        })
+    })
+    .await
+    .map_err(|e| format!("stat task failed: {e}"))?
 }
