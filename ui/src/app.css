@@ -1,0 +1,162 @@
+/* ==========================================================================
+   Todoke desktop — same DNA as todoke.tech:
+   dark asphalt canvas, one volt accent, lane-dash dividers, Archivo.
+   ========================================================================== */
+
+@font-face {
+  font-family: "Archivo";
+  src: url("/fonts/archivo-var-latin.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* Color — OKLCH source of truth; hex = computed sRGB fallback */
+  --ink-0: #080d11;
+  --ink-1: #13181d;
+  --ink-2: #1a2026;
+  --line: #2b3138;
+  --text-hi: #f4f4ef;
+  --text: #cfd5db;
+  --text-dim: #9fa5ac;
+  --volt: #f2e309;
+  --volt-ink: #10100b;
+  --glow: #16827d;
+  --ok: #7ad97a;
+  --warn: #e2b93b;
+  --err: #e2604e;
+
+  @media (color-gamut: p3) {
+    --volt: oklch(0.9 0.2 105);
+    --glow: oklch(0.55 0.105 190);
+  }
+
+  /* Type */
+  --font: "Archivo", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --fs-h1: 1.9rem;
+  --fs-h2: 1.35rem;
+  --fs-h3: 1.1rem;
+  --fs-body: 1rem;
+  --fs-sm: 0.875rem;
+  --fs-xs: 0.8125rem;
+
+  /* Space (4px base) */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+
+  /* Radius */
+  --r-pill: 999px;
+  --r-tile: 0.625rem;
+
+  /* Motion — one easing language, restrained for app UI */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-1: 160ms;
+  --dur-2: 240ms;
+
+  /* Structure */
+  --head-h: 4rem;
+  --rail-w: 13.5rem;
+  --lane-dash: repeating-linear-gradient(
+    90deg,
+    var(--line) 0 1.5rem,
+    transparent 1.5rem 2.5rem
+  );
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--ink-0);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-body);
+  line-height: 1.55;
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  height: 100dvh;
+  overflow: hidden;
+  user-select: none;
+}
+
+#app {
+  height: 100dvh;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--text-hi);
+  margin: 0;
+  font-weight: 640;
+  letter-spacing: -0.015em;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font: inherit;
+  color: var(--text-hi);
+}
+
+a {
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 2px solid var(--volt);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 5px;
+  border: 2px solid var(--ink-0);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Reduced motion: entrances/pulses become instant, nothing essential lost. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
