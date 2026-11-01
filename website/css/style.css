@@ -60,12 +60,16 @@
   --r-pill: 999px;
   --r-tile: 0.625rem;
 
-  /* Motion — one easing language */
+  /* Motion — one easing language.
+     --ease-out: micro + entrances (snappy, springy)
+     --ease-luxe: section choreography (Pyzhevsky ease, ~1600 ms median) */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-luxe: cubic-bezier(0.25, 0.74, 0.22, 0.99);
   --dur-1: 160ms;   /* micro: hovers, presses   */
   --dur-2: 320ms;   /* state changes            */
   --dur-3: 680ms;   /* entrances                */
   --dur-4: 1200ms;  /* ambient (streaks, loops) */
+  --dur-5: 1600ms;  /* choreographed reveals    */
 
   /* Structure */
   --head-h: 4rem;
@@ -288,7 +292,21 @@ a { color: inherit; }
     radial-gradient(46rem 30rem at 12% 88%, oklch(0.55 0.09 190 / 0.10), transparent 70%);
 }
 
-.hero__in { display: grid; gap: var(--s5); }
+.hero__in { display: grid; gap: var(--s5); position: relative; z-index: 1; }
+
+/* Three.js packet stream — lazy-initialized; CSS streaks remain until it lands */
+.hero__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--dur-5) var(--ease-luxe);
+}
+.has-3d .hero__canvas { opacity: 1; }
+.has-3d .hero__streaks { display: none; }
 
 .hero__title {
   font-size: var(--fs-hero);
@@ -412,15 +430,17 @@ a { color: inherit; }
 /* --------------------------------------------------------------------------
    Scroll reveals — single-shot, staggered per element via --reveal-delay.
    Gated on .js so the page is fully visible without JavaScript.
+   When GSAP drives (html.gsap) it owns reveal styling entirely — the CSS
+   transition is off so per-frame tween values aren't double-interpolated.
    -------------------------------------------------------------------------- */
-.js [data-reveal] {
+.js:not(.gsap) [data-reveal] {
   opacity: 0;
   translate: 0 1.25rem;
   transition:
     opacity var(--dur-3) var(--ease-out) var(--reveal-delay, 0ms),
     translate var(--dur-3) var(--ease-out) var(--reveal-delay, 0ms);
 }
-.js [data-reveal].is-in {
+.js:not(.gsap) [data-reveal].is-in {
   opacity: 1;
   translate: 0 0;
 }
@@ -478,7 +498,7 @@ a { color: inherit; }
   --lane-d: 1.5s;
 }
 @keyframes lane-dash {
-  to { stroke-todokeffset: -38; } /* one dash+gap period, seamless loop */
+  to { stroke-dashoffset: -38; } /* one dash+gap period, seamless loop */
 }
 
 /* Motif 2 — resume: progress interrupted twice, then completes */
@@ -492,7 +512,7 @@ a { color: inherit; }
   stroke-width: 4;
   stroke-linecap: round;
   stroke-dasharray: 100;
-  stroke-todokeffset: 55; /* static fallback: mid-transfer */
+  stroke-dashoffset: 55; /* static fallback: mid-transfer */
   transform-origin: 8px 75px;
   animation: resume-run 7s var(--ease-out) infinite;
 }
@@ -505,13 +525,13 @@ a { color: inherit; }
   letter-spacing: 0.04em;
 }
 @keyframes resume-run {
-  0%   { stroke-todokeffset: 96; }
-  18%  { stroke-todokeffset: 58; }
-  30%  { stroke-todokeffset: 58; }  /* pause one: sleep */
-  58%  { stroke-todokeffset: 30; }
-  68%  { stroke-todokeffset: 30; }  /* pause two: network switch */
-  90%  { stroke-todokeffset: 0; }   /* complete */
-  100% { stroke-todokeffset: 0; }
+  0%   { stroke-dashoffset: 96; }
+  18%  { stroke-dashoffset: 58; }
+  30%  { stroke-dashoffset: 58; }  /* pause one: sleep */
+  58%  { stroke-dashoffset: 30; }
+  68%  { stroke-dashoffset: 30; }  /* pause two: network switch */
+  90%  { stroke-dashoffset: 0; }   /* complete */
+  100% { stroke-dashoffset: 0; }
 }
 @keyframes resume-pulse {
   0%   { opacity: 0; translate: 0 0; }
@@ -784,6 +804,9 @@ a { color: inherit; }
 
 .faq__a { padding-bottom: var(--s5); }
 .faq__a p { max-width: 62ch; }
+/* anime.js animates .faq__a height — padding must live on the inner p */
+.gsap .faq__a { padding-bottom: 0; overflow: hidden; }
+.gsap .faq__a p { padding-bottom: var(--s5); }
 
 /* --------------------------------------------------------------------------
    Footer
