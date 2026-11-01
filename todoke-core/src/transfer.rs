@@ -434,6 +434,13 @@ async fn run_round<T: Transport>(
         let progress = progress.cloned();
         async move {
             let (mut data_tx, _data_rx) = transport.open_bi().await?;
+            // Per-worker state: handles stay open while a worker works through
+            // a file's chunks (queue order is contiguous per file), and one
+            // read buffer is reused for every chunk instead of a fresh
+            // allocation each time.
+            let mut handles: std::collections::HashMap<u32, tokio::fs::File> =
+                std::collections::HashMap::new();
+            let mut buf = Vec::with_capacity(256 * 1024);
             loop {
                 let task = {
                     let mut q = queue.lock().expect("task queue poisoned");
@@ -444,8 +451,13 @@ async fn run_round<T: Transport>(
                 };
                 let entry = &manifest_ref.files[file_idx as usize];
                 let chunk = &entry.chunks[chunk_idx as usize];
-                let mut file = tokio::fs::File::open(&sources_ref[file_idx as usize]).await?;
-                let mut buf = vec![0u8; chunk.length as usize];
+                let file = match handles.entry(file_idx) {
+                    std::collections::hash_map::Entry::Occupied(e) => e.into_mut(),
+                    std::collections::hash_map::Entry::Vacant(e) => {
+                        e.insert(tokio::fs::File::open(&sources_ref[file_idx as usize]).await?)
+                    }
+                };
+                buf.resize(chunk.length as usize, 0);
                 file.seek(SeekFrom::Start(chunk.offset)).await?;
                 file.read_exact(&mut buf).await?;
                 write_data_frame(&mut data_tx, file_idx, chunk_idx, &buf).await?;
@@ -525,6 +537,20 @@ pub async fn receive<T: Transport>(
     let staging_key: String = manifest.hash.chars().take(STAGING_KEY_LEN).collect();
     sweep_staging(&opts.staging_root, &staging_key);
     fs::create_dir_all(&stage_dir)?;
+    // Pre-create every directory the manifest needs — the frame loop then
+    // never pays a create_dir_all per chunk.
+    {
+        use std::collections::HashSet as DirSet;
+        let mut made: DirSet<PathBuf> = DirSet::new();
+        for entry in &manifest.files {
+            let staged = stage_dir.join(&entry.path);
+            if let Some(parent) = staged.parent() {
+                if made.insert(parent.to_path_buf()) {
+                    fs::create_dir_all(parent)?;
+                }
+            }
+        }
+    }
 
     // Resume (ticket 07): reconcile the staged leftovers from any previous
     // session against the manifest — chunks whose bytes hash correctly on
@@ -867,6 +893,12 @@ pub async fn receive<T: Transport>(
 /// crashes and truncation are handled without a separate state file.
 fn reconcile_from_disk(manifest: &Manifest, stage_dir: &Path) -> Vec<HashSet<u32>> {
     let mut valid: Vec<HashSet<u32>> = manifest.files.iter().map(|_| HashSet::new()).collect();
+    for entry in &manifest.files {
+        let staged = stage_dir.join(&entry.path);
+        if let Some(parent) = staged.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+    }
     for (file_idx, entry) in manifest.files.iter().enumerate() {
         if entry.chunks.is_empty() {
             continue; // empty files are trivially complete
@@ -1014,10 +1046,9 @@ fn stage_frame(
 
     let mut st = state.lock().expect("session state poisoned");
     if st.received[file as usize].insert(chunk) {
+        // Parent dirs were pre-created at session start (resume included:
+        // reconcile re-runs this pass), so frames only write.
         let staged = stage_dir.join(&entry.path);
-        if let Some(parent) = staged.parent() {
-            fs::create_dir_all(parent)?;
-        }
         // Offset-based chunk writes: never truncate — resume (ticket 07)
         // relies on previously staged bytes surviving.
         let out = handles.entry(file).or_insert_with(|| {

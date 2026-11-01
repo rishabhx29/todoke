@@ -256,6 +256,39 @@ fn scenario_resume(size_mb: u64) -> Result<BenchResult, String> {
     })
 }
 
+/// Scenario: plain `fs::copy` of the same fixtures — the "just copying on
+/// this machine" baseline that puts engine numbers in context.
+fn scenario_copy_baseline(size_mb: u64) -> Result<BenchResult, String> {
+    let src = temp_root("cb-src");
+    let data = pseudo_bytes(0xB16, size_mb as usize * 1024 * 1024);
+    let file = write_fixture(&src, "big.dat", &data);
+    let dst = temp_root("cb-dst");
+    let started = Instant::now();
+    let bytes = fs::copy(&file, dst.join("big.dat")).map_err(|e| e.to_string())?;
+    let mut notes = "plain fs::copy, same disk".to_string();
+    // Small-file floor: 2000 × 2 KiB plain copies — the per-file cost ANY
+    // tool pays on this OS/filesystem.
+    let small_src = temp_root("cb-small-src");
+    let small_dst = temp_root("cb-small-dst");
+    let mut small_bytes = 0u64;
+    let small_started = Instant::now();
+    for i in 0..2000u32 {
+        let p = write_fixture(
+            &small_src,
+            &format!("f{i}.bin"),
+            &pseudo_bytes(i as u64 + 1, 2048),
+        );
+        small_bytes +=
+            fs::copy(&p, small_dst.join(format!("f{i}.bin"))).map_err(|e| e.to_string())?;
+    }
+    let small_ms = small_started.elapsed().as_millis();
+    notes.push_str(&format!(
+        "; small-file floor: 2000 x 2KiB plain copy = {small_ms} ms"
+    ));
+    let _ = small_bytes;
+    Ok(to_result("copy-baseline", bytes, started, &notes))
+}
+
 /// Run the requested scenarios (None = all) and return the report.
 pub fn run(scenario: Option<&str>, size_mb: u64) -> Result<BenchReport, String> {
     let mut report = env_report();
@@ -274,6 +307,9 @@ pub fn run(scenario: Option<&str>, size_mb: u64) -> Result<BenchReport, String> 
         Err(e) => eprintln!("bench: scenario failed: {e}"),
     };
     let run_all = scenario.is_none();
+    if run_all || scenario == Some("copy-baseline") {
+        push(scenario_copy_baseline(size_mb));
+    }
     if run_all || scenario == Some("big-file") {
         push(scenario_big_file(size_mb));
     }

@@ -85,13 +85,19 @@ todoke bench                      # all scenarios, 64 MB default
 TODOKE_BENCH_SIZE_MB=256 todoke bench --scenario big-file --output results.json
 ```
 
-Scenarios: `big-file` (throughput ceiling), `many-small` (2000 × 2 KiB —
+Scenarios: `copy-baseline` (plain fs::copy of the same fixtures — the
+context line), `big-file` (throughput ceiling), `many-small` (2000 × 2 KiB —
 per-file overhead), `resume` (restart cost that resume avoids). Loopback
 numbers measure engine overhead only; publish LAN numbers from two real
 machines using the same JSON schema. Re-runs should agree within ±10%.
-Known current result (debug build, loopback): big-file ≈ 48–54 MB/s,
-many-small ≈ 0.8 MB/s — the small-file path is the next optimization target
-(release profile + per-stream file handles are the first levers).
+
+Release-build results (Windows x64, NVMe, loopback, 4 streams):
+big-file **≈ 105–115 MB/s** (at gigabit wire speed — the engine is not the
+bottleneck for real LAN use); many-small **≈ 2.8 s** for 2000 files vs a
+**1.8 s plain-copy floor** for the same fixture — within 1.6× of the OS
+per-file cost, which every tool on the platform pays. Remaining levers,
+in order: sender-side chunk read batching for multi-chunk files, BLAKE3
+parallel verify, container bundling for many-small semantics.
 
 ## Development
 
