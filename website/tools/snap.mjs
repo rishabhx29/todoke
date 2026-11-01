@@ -29,6 +29,8 @@ const [width, height] = sizeArg.split(",").map(Number);
 const reduced = args.includes("--reduced-motion");
 const wantConsole = args.includes("--console");
 const fullPage = args.includes("--full");
+const atIdx = args.indexOf("--at");
+const at = atIdx !== -1 ? args[atIdx + 1] : null; // CSS selector or Y px
 
 const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css",
   ".js": "text/javascript", ".mjs": "text/javascript", ".svg": "image/svg+xml",
@@ -108,6 +110,21 @@ if (reduced) {
 await send("Page.navigate", { url: `http://127.0.0.1:${SITE_PORT}/` });
 await new Promise((r) => setTimeout(r, 1500));
 
+if (at) {
+  // scroll to a selector (e.g. "#how") or a Y px value, let reveals settle
+  await send("Runtime.evaluate", {
+    expression: `(async () => {
+      document.documentElement.style.scrollBehavior = 'auto';
+      const t = ${JSON.stringify(at)};
+      const el = document.querySelector(t);
+      scrollTo(0, el ? el.getBoundingClientRect().top + scrollY : Number(t) || 0);
+    })()`,
+    awaitPromise: true,
+  });
+  // long enough for batched reveals (1.4 s tween + stagger) to finish
+  await new Promise((r) => setTimeout(r, 3400));
+}
+
 if (fullPage) {
   // scroll through the page so IntersectionObserver reveals fire, then return to top
   await send("Runtime.evaluate", {
@@ -135,7 +152,8 @@ const { result: { result: { value: layout } } } = await send("Runtime.evaluate",
   expression: `JSON.stringify({
     scrollW: document.documentElement.scrollWidth,
     clientW: document.documentElement.clientWidth,
-    hScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth
+    hScroll: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    scrollY: Math.round(scrollY)
   })`,
   returnByValue: true,
 });
