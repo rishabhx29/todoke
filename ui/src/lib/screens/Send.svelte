@@ -1,6 +1,5 @@
 <script lang="ts">
   import { open } from "@tauri-apps/plugin-dialog";
-  import { Channel } from "@tauri-apps/api/core";
   import { getCurrentWebview } from "@tauri-apps/api/webview";
   import {
     cancelTransfer,
@@ -212,11 +211,8 @@
     failMessage = null;
     cancelledByUser = false;
 
-    const channel = new Channel<SendEvent>();
-    channel.onmessage = handleEvent;
-
     try {
-      session = await sendFiles(items, device, channel);
+      session = await sendFiles(items, device, handleEvent);
     } catch (e) {
       failMessage = e instanceof Error ? e.message : String(e);
       phase = "failed";

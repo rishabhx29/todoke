@@ -73,18 +73,25 @@ export function listDevices(timeoutMs = 3000): Promise<Device[]> {
   return invoke("list_devices", { timeoutMs });
 }
 
-/** Starts a send session; resolves with the session id immediately. */
+/**
+ * Starts a send session; resolves with the session id immediately. Progress
+ * and the outcome (`finished`/`failed`) arrive on `onMessage`, strictly in
+ * engine order — the IPC Channel is constructed here so callers never touch
+ * Tauri internals.
+ */
 export function sendFiles(
   paths: string[],
   device: Device,
-  onEvent: Channel<SendEvent>,
+  onMessage: (event: SendEvent) => void,
 ): Promise<number> {
+  const channel = new Channel<SendEvent>();
+  channel.onmessage = onMessage;
   return invoke("send_files", {
     paths,
     addr: `${device.addr}:${device.port}`,
     fingerprint: device.fingerprint,
     certB64: device.certB64,
-    onEvent,
+    onEvent: channel,
   });
 }
 
