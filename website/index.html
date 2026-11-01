@@ -63,6 +63,7 @@
 
     <!-- ============================================================ hero -->
     <section class="hero" id="top">
+      <canvas class="hero__canvas" id="hero-canvas" aria-hidden="true"></canvas>
       <div class="wrap hero__in">
         <h1 class="hero__title">Files that move<span class="hero__dot" aria-hidden="true">.</span></h1>
         <p class="hero__sub">40&nbsp;GB of trip pics, the whole semester folder, tonight’s 12&nbsp;GB render. Todoke sends it all straight to the device next to you at local-network speed. No cloud, no size limits, no accounts.</p>
@@ -386,6 +387,12 @@
     </div>
   </footer>
 
+  <script src="vendor/gsap/gsap.min.js" defer></script>
+  <script src="vendor/gsap/CustomEase.min.js" defer></script>
+  <script src="vendor/gsap/ScrollTrigger.min.js" defer></script>
+  <script src="vendor/lenis/lenis.min.js" defer></script>
+  <script src="vendor/anime/anime.min.js" defer></script>
   <script src="js/main.js" defer></script>
+  <script type="module" src="js/hero3d.js"></script>
 </body>
 </html>
