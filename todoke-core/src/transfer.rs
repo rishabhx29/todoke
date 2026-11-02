@@ -29,7 +29,7 @@ use tokio::io::{AsyncReadExt, AsyncSeekExt};
 use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{
-    chunk::{ChunkParams, hash_reader},
+    chunk::{ChunkParams, hash_file},
     manifest::{Manifest, Receipt, ReceiptFile, build_manifest_and_paths},
     protocol::{
         ChunkId, Envelope, HaveFile, Message, ProtocolError, read_data_frame, read_message,
@@ -775,7 +775,10 @@ pub async fn receive<T: Transport>(
                     expected: entry.size,
                 });
             }
-            let got = hash_reader(fs::File::open(&staged)?)?;
+            // Whole-file verification of everything that reached disk. Large
+            // files hash on all cores (mmap + rayon); the result is identical
+            // to the single-threaded hash either way.
+            let got = hash_file(&staged)?;
             if got != entry.hash {
                 return Err(TransferError::FileHashMismatch {
                     path: entry.path.clone(),

@@ -6,9 +6,16 @@
 //! receiver re-hashes with the same BLAKE3, but cut points are produced by the
 //! sender only.
 
-use std::io::Read;
+use std::{fs, io::Read, path::Path};
 
 use fastcdc::v2020::StreamCDC;
+
+/// Files at least this large are hashed with BLAKE3's memory-mapped,
+/// multithreaded path ([`blake3::Hasher::update_mmap_rayon`]); below it,
+/// multithreading costs more than it saves (blake3's own rule of thumb is a
+/// ~128 KiB crossover on x86_64 — the margin here also keeps small-file
+/// finalization free of rayon scheduling).
+const PARALLEL_HASH_MIN: u64 = 4 * 1024 * 1024;
 
 /// The BLAKE3 hash of the empty input (useful constant for empty files).
 pub const EMPTY_BLAKE3: &str = "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
@@ -107,5 +114,20 @@ pub fn chunk_reader(reader: impl Read, params: &ChunkParams) -> Result<Vec<Chunk
 pub fn hash_reader(reader: impl Read) -> Result<String, ChunkError> {
     let mut hasher = blake3::Hasher::new();
     hasher.update_reader(reader)?;
+    Ok(hasher.finalize().to_hex().to_string())
+}
+
+/// Whole-file BLAKE3 hash (hex) of the file at `path`, read however is
+/// fastest for its size: memory-mapped + multithreaded for large files (the
+/// receiver's finalize-verification case), plain buffered reading otherwise.
+/// The hash is identical either way.
+pub fn hash_file(path: &Path) -> Result<String, ChunkError> {
+    let len = fs::metadata(path)?.len();
+    let mut hasher = blake3::Hasher::new();
+    if len >= PARALLEL_HASH_MIN {
+        hasher.update_mmap_rayon(path)?;
+    } else {
+        hasher.update_reader(fs::File::open(path)?)?;
+    }
     Ok(hasher.finalize().to_hex().to_string())
 }
