@@ -153,6 +153,7 @@ impl Advertiser {
             .unregister(&self.fullname)
             .map_err(|e| DiscoveryError::Daemon(e.to_string()));
         let _ = self.daemon.stop_browse(&self.service_type);
+        let _ = self.daemon.shutdown();
         Ok(())
     }
 }
@@ -161,6 +162,7 @@ impl Drop for Advertiser {
     fn drop(&mut self) {
         let _ = self.daemon.unregister(&self.fullname);
         let _ = self.daemon.stop_browse(&self.service_type);
+        let _ = self.daemon.shutdown();
     }
 }
 
@@ -239,6 +241,9 @@ pub fn browse_blocking(deadline: Instant) -> Result<Vec<DeviceRecord>, Discovery
         }
     }
     let _ = daemon.stop_browse(SERVICE_TYPE);
+    // Release the daemon's worker thread and sockets: browse_blocking owns
+    // this daemon and nothing else can be using it.
+    let _ = daemon.shutdown();
 
     // Dedupe by fingerprint, first seen wins, preserving insertion order.
     let mut seen = std::collections::HashSet::new();

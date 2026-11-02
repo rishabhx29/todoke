@@ -81,7 +81,16 @@ async fn dial(
 }
 
 /// A raw protocol sender that writes the first `send_chunks` chunks of the
-/// manifest's file, then abruptly dies (no FIN, no Complete).
+/// manifest's file, then breaks the session (no FIN, no Complete).
+///
+/// The last frame it writes is a SENTINEL the receiver rejects (a file index
+/// past the manifest). The receiver processes a stream's frames strictly in
+/// order, so the moment it fails on the sentinel, every chunk before it was
+/// verified and staged — no drain sleeps, no races: the staged state at the
+/// start of the resumed session is exactly `send_chunks` chunks. The CALLER
+/// must keep the connection alive until the receiver's session has failed
+/// (dropping it early would discard in-flight frames, the thing a crash
+/// simulation must not be able to do nondeterministically).
 async fn rogue_partial(
     conn: &quinn::Connection,
     peer_fp: &str,
@@ -127,10 +136,12 @@ async fn rogue_partial(
             .await
             .unwrap();
     }
-    // Give the receiver time to drain every queued frame, then die without
-    // FIN (a real crash happens after data has flowed for a while).
-    tokio::time::sleep(Duration::from_millis(1200)).await;
-    transport::Transport::close(conn, 9, b"crashed");
+    // The sentinel: a valid frame header for a file that cannot exist. The
+    // receiver errors the session here, having already staged every chunk
+    // above (in-order stream processing).
+    write_data_frame(&mut data_tx, u32::MAX, 0, b"sentinel")
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -149,16 +160,20 @@ async fn resume_completes_and_skips_already_received_chunks() {
     let opts = ReceiveOptions::new(target.path().to_path_buf(), staging.path().to_path_buf());
     let (addr, mut receiver) = serve_sessions(server_id, opts, 2).await;
 
-    // Session 1: rogue sends a third, then crashes. Receiver must fail.
+    // Session 1: rogue sends a third, then breaks the session. Receiver must
+    // fail. The connection stays alive until the failure is observed so the
+    // sentinel (and everything before it) is guaranteed to be processed.
     {
         let (_ep, conn) = dial(addr, &fp, &cert).await;
         rogue_partial(&conn, &fp, &manifest, &file, partial).await;
+        let first = tokio::time::timeout(Duration::from_secs(30), receiver.recv())
+            .await
+            .expect("session 1 done")
+            .expect("receiver alive");
+        assert!(first.is_err(), "crashed session must fail: {first:?}");
+        // conn drops here — the receiver already failed on the sentinel, so
+        // exactly `partial` chunks are staged for the resumed session.
     }
-    let first = tokio::time::timeout(Duration::from_secs(30), receiver.recv())
-        .await
-        .expect("session 1 done")
-        .expect("receiver alive");
-    assert!(first.is_err(), "crashed session must fail: {first:?}");
 
     // Session 2: a full send() reconciles against staging and completes.
     let (event_tx, mut event_rx) = mpsc::unbounded_channel();

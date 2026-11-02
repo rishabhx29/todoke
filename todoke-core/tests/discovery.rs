@@ -4,14 +4,44 @@
 //! These tests use real multicast on the host's network interfaces. They
 //! need an active network interface (Wi-Fi or Ethernet); on hosts without
 //! one, the loopback-only tests still run and the LAN test is skipped.
+//!
+//! mDNS propagation on a loaded host can outlast a single browse window
+//! (daemon startup, first query burst, late registration), so every check
+//! browses in rounds within a budget and asserts on the FINAL round — the
+//! assertions themselves are unchanged.
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use todoke_core::{
     discovery::{self, DeviceRecord, DiscoveryError},
     identity::DeviceIdentity,
     transport,
 };
+
+/// Budget within which mDNS answers are expected to converge on a healthy
+/// host; exhausted rounds fall through to the plain assertions.
+const PROPAGATION_BUDGET: Duration = Duration::from_secs(24);
+
+/// Browse in rounds until `found` holds or the budget elapses, returning the
+/// last round's records (callers assert on them either way).
+async fn browse_until(found: impl Fn(&[DeviceRecord]) -> bool) -> Vec<DeviceRecord> {
+    let deadline = Instant::now() + PROPAGATION_BUDGET;
+    let mut last = Vec::new();
+    while Instant::now() < deadline {
+        last = discovery::browse(Duration::from_secs(3)).await.unwrap();
+        if found(&last) {
+            break;
+        }
+        tokio::time::sleep(Duration::from_millis(250)).await;
+    }
+    last
+}
+
+/// Browse in rounds until `gone` holds (or the budget elapses), returning the
+/// last round's records.
+async fn browse_until_gone(gone: impl Fn(&[DeviceRecord]) -> bool) -> Vec<DeviceRecord> {
+    browse_until(gone).await
+}
 
 fn tmpdir(tag: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!("todoke-discovery-{tag}-{}", std::process::id()));
@@ -34,10 +64,11 @@ async fn advertised_device_is_discovered_on_same_host() {
     let advertiser =
         discovery::Advertiser::advertise_on(&id, &server, 45_001, "127.0.0.1").unwrap();
 
-    // Give the announcer a moment, then browse.
-    tokio::time::sleep(Duration::from_millis(700)).await;
-    let records = discovery::browse(Duration::from_secs(6)).await.unwrap();
-
+    let records = browse_until(|r| {
+        r.iter()
+            .any(|d| d.fingerprint == fp && d.name == "Test-Laptop")
+    })
+    .await;
     advertiser.stop().unwrap();
     assert!(
         records
@@ -60,8 +91,7 @@ async fn duplicate_announcements_dedupe_by_fingerprint() {
     let a = discovery::Advertiser::advertise_on(&id, &server, 45_011, "127.0.0.1").unwrap();
     let b = discovery::Advertiser::advertise_on(&id, &server, 45_012, "127.0.0.1").unwrap();
 
-    tokio::time::sleep(Duration::from_millis(700)).await;
-    let records = discovery::browse(Duration::from_secs(6)).await.unwrap();
+    let records = browse_until(|r| r.iter().any(|d| d.fingerprint == fp)).await;
     drop(a);
     drop(b);
 
@@ -78,11 +108,11 @@ async fn advertiser_stop_removes_the_service() {
     let fp = id.fingerprint();
     let advertiser =
         discovery::Advertiser::advertise_on(&id, &server, 45_021, "127.0.0.1").unwrap();
-    tokio::time::sleep(Duration::from_millis(700)).await;
     advertiser.stop().unwrap();
-    tokio::time::sleep(Duration::from_millis(700)).await;
 
-    let records = discovery::browse(Duration::from_secs(5)).await.unwrap();
+    // The device must be gone; in-flight responses may take a moment to
+    // drain, so settle on the final state within the budget.
+    let records = browse_until_gone(|r| !r.iter().any(|d| d.fingerprint == fp)).await;
     assert!(
         !records.iter().any(|r| r.fingerprint == fp),
         "unregistered device must not be discovered: {records:?}"

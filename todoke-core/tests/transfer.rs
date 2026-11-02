@@ -399,9 +399,14 @@ async fn corrupted_chunk_is_rejected_and_target_stays_clean() {
             .await
             .unwrap();
     }
+    // Sentinel: a frame the receiver rejects (file index past the manifest).
+    // The receiver processes a stream in order, so by the time it errors here
+    // the four frames above were fully processed (the tampered one recorded,
+    // the good ones staged) — no drain-sleep race before the connection ends.
+    write_data_frame(&mut data_tx, u32::MAX, 0, b"sentinel")
+        .await
+        .unwrap();
     drop(data_tx);
-    tokio::time::sleep(Duration::from_millis(400)).await;
-    Transport::close(&conn, 10, b"done sending");
 
     let result = tokio::time::timeout(Duration::from_secs(30), receiver)
         .await
@@ -456,12 +461,10 @@ async fn tampered_manifest_offer_is_rejected() {
     )
     .await
     .unwrap();
-    drop(ctl_tx);
-    // Let the receiver read the queued Hello/Offer before the close frame
-    // arrives (quinn discards queued-but-unacked data on close).
-    tokio::time::sleep(Duration::from_millis(400)).await;
-    Transport::close(&conn, 11, b"bye");
-
+    // The receiver fails on the tampered offer itself; no close is needed —
+    // keeping the connection alive until the result is observed guarantees
+    // the Hello/Offer were read (a premature close could turn the outcome
+    // into a connection error instead of the typed rejection below).
     let result = tokio::time::timeout(Duration::from_secs(30), receiver)
         .await
         .expect("receiver finishes")
@@ -472,5 +475,6 @@ async fn tampered_manifest_offer_is_rejected() {
         }
         other => panic!("expected RemoteError, got {other:?}"),
     }
+    drop(ctl_tx);
     assert_eq!(fs::read_dir(target.path()).unwrap().count(), 0);
 }
