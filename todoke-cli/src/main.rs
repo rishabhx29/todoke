@@ -342,7 +342,9 @@ fn send(
             port: parsed.port(),
             addr: match parsed.ip() {
                 std::net::IpAddr::V4(v4) => v4,
-                _other => fail("direct mode requires an IPv4 address (v1 limitation)"),
+                std::net::IpAddr::V6(_) => {
+                    fail("direct mode requires an IPv4 address (v1 limitation)")
+                }
             },
         };
         (record, addr.clone(), fp.clone())
@@ -383,7 +385,7 @@ fn send(
         tokio::pin!(send_fut);
         let send = tokio::select! {
             r = &mut send_fut => Some(r),
-            _ = async {
+            () = async {
                 loop {
                     match event_rx.recv().await {
                         Some(TransferEvent::FileStarted { path, size }) => {
@@ -401,16 +403,13 @@ fn send(
             } => None,
             _ = tokio::signal::ctrl_c() => None,
         };
-        match send {
-            Some(r) => {
-                bar.finish_and_clear();
-                r
-            }
-            None => {
-                bar.finish_and_clear();
-                eprintln!("cancelled — rerun the same command to resume where it left off");
-                std::process::exit(130);
-            }
+        if let Some(r) = send {
+            bar.finish_and_clear();
+            r
+        } else {
+            bar.finish_and_clear();
+            eprintln!("cancelled — rerun the same command to resume where it left off");
+            std::process::exit(130);
         }
     });
 

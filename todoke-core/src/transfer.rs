@@ -605,7 +605,7 @@ pub async fn receive<T: Transport>(
     // Rounds loop: each round runs the concurrent session (accept streams,
     // process frames, watch control) and ends in a receipt, an error, or a
     // Missing re-request that starts the next round.
-    'session: loop {
+    loop {
         let mut processors: futures::stream::FuturesUnordered<ProcessorFuture<'_>> =
             futures::stream::FuturesUnordered::new();
         let mut accepted = 0usize;
@@ -663,7 +663,7 @@ pub async fn receive<T: Transport>(
                                 &mut handles,
                                 file,
                                 chunk,
-                                payload,
+                                &payload,
                             ) {
                                 break Err(e);
                             }
@@ -680,12 +680,12 @@ pub async fn receive<T: Transport>(
                 ctl = read_message(&mut ctl_rx) => {
                     match ctl {
                         Ok(Envelope { message: Message::Complete { manifest_hash }, .. }) => {
-                            if manifest_hash != manifest.hash {
+                            if manifest_hash == manifest.hash {
+                                outcome = Some(Outcome::Complete);
+                            } else {
                                 outcome = Some(Outcome::PeerError(format!(
                                     "sender completed a different manifest ({manifest_hash})"
                                 )));
-                            } else {
-                                outcome = Some(Outcome::Complete);
                             }
                         }
                         Ok(Envelope { message: Message::Error { message }, .. }) => {
@@ -870,7 +870,7 @@ pub async fn receive<T: Transport>(
                 )
                 .await?;
                 processors.clear();
-                continue 'session;
+                // Falls through to the next round of this loop.
             }
             Outcome::Cancelled(reason) => return Err(TransferError::Cancelled(reason)),
             Outcome::PeerError(message) => return Err(TransferError::RemoteError(message)),
@@ -912,7 +912,7 @@ fn reconcile_from_disk(manifest: &Manifest, stage_dir: &Path) -> Vec<HashSet<u32
         };
         // A partially-staged file is expected on resume: judge each chunk
         // individually (present AND hash-correct), never the whole file size.
-        let len = f.metadata().map(|m| m.len()).unwrap_or(0);
+        let len = f.metadata().map_or(0, |m| m.len());
         for (ci, chunk) in entry.chunks.iter().enumerate() {
             if chunk.offset.saturating_add(chunk.length) > len {
                 continue; // past what ever reached disk
@@ -954,7 +954,7 @@ fn sweep_staging(staging_root: &Path, keep_key: &str) {
         return;
     };
     let mut dirs: Vec<(std::time::SystemTime, PathBuf)> = entries
-        .filter_map(|e| e.ok())
+        .filter_map(Result::ok)
         .filter(|e| e.path().is_dir())
         .filter_map(|e| {
             let modified = e.metadata().and_then(|m| m.modified()).ok()?;
@@ -962,8 +962,7 @@ fn sweep_staging(staging_root: &Path, keep_key: &str) {
         })
         .filter(|(_, p)| {
             p.file_name()
-                .map(|n| n.to_string_lossy() != keep_key)
-                .unwrap_or(false)
+                .is_some_and(|n| n.to_string_lossy() != keep_key)
         })
         .collect();
     if dirs.len() < MAX_STAGING_DIRS {
@@ -1015,7 +1014,7 @@ fn stage_frame(
     handles: &mut std::collections::HashMap<u32, fs::File>,
     file: u32,
     chunk: u32,
-    payload: Vec<u8>,
+    payload: &[u8],
 ) -> Result<(), TransferError> {
     let entry = manifest
         .files
@@ -1032,7 +1031,7 @@ fn stage_frame(
             expected: chunk_info.length,
         });
     }
-    let got = blake3::hash(&payload).to_hex().to_string();
+    let got = blake3::hash(payload).to_hex().to_string();
     if got != chunk_info.hash {
         // Damaged in transit: record it, write nothing. The reconciliation
         // after the streams settle reports it as missing and the sender
@@ -1063,7 +1062,7 @@ fn stage_frame(
                 .expect("staging file open")
         });
         out.seek(SeekFrom::Start(chunk_info.offset))?;
-        out.write_all(&payload)?;
+        out.write_all(payload)?;
     }
     Ok(())
 }
@@ -1079,7 +1078,7 @@ async fn quiesce(ctl_tx: &mut quinn::SendStream, ctl_rx: &mut quinn::RecvStream)
         loop {
             match ctl_rx.read(&mut drain).await {
                 Ok(None) | Err(_) => break,
-                Ok(Some(_)) => continue,
+                Ok(Some(_)) => {}
             }
         }
     })
@@ -1127,6 +1126,7 @@ fn move_into_place(src: &Path, dest: &Path) -> Result<(), TransferError> {
 }
 
 /// Count staged bytes under a staging directory (test/diagnostics helper).
+#[must_use]
 pub fn staged_bytes(staging_root: &Path, manifest_hash: &str) -> u64 {
     let key: String = manifest_hash
         .chars()
@@ -1138,11 +1138,11 @@ pub fn staged_bytes(staging_root: &Path, manifest_hash: &str) -> u64 {
     let Ok(entries) = fs::read_dir(&dir) else {
         return 0;
     };
-    let mut stack: Vec<PathBuf> = entries.filter_map(|e| e.ok()).map(|e| e.path()).collect();
+    let mut stack: Vec<PathBuf> = entries.filter_map(Result::ok).map(|e| e.path()).collect();
     while let Some(path) = stack.pop() {
         if path.is_dir() {
             if let Ok(entries) = fs::read_dir(&path) {
-                stack.extend(entries.filter_map(|e| e.ok()).map(|e| e.path()));
+                stack.extend(entries.filter_map(Result::ok).map(|e| e.path()));
             }
         } else if let Ok(md) = path.metadata() {
             total += md.len();

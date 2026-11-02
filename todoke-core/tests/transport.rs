@@ -28,10 +28,7 @@ async fn spawn_echo_server(tag: &str) -> (String, SocketAddr, CertificateDer<'st
         .expect("serve");
     tokio::spawn(async move {
         while let Some(incoming) = endpoint.accept().await {
-            let conn = match incoming.await {
-                Ok(c) => c,
-                Err(_) => continue,
-            };
+            let Ok(conn) = incoming.await else { continue };
             tokio::spawn(async move {
                 while let Ok((mut tx, mut rx)) = conn.accept_bi().await {
                     let mut buf = [0u8; 6];

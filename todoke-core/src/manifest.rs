@@ -150,7 +150,7 @@ fn walk(root: &Path) -> Result<Walked, ManifestError> {
         empty_dirs: &mut Vec<String>,
     ) -> Result<(), ManifestError> {
         let mut entries: Vec<PathBuf> = std::fs::read_dir(dir)?
-            .filter_map(|e| e.ok())
+            .filter_map(Result::ok)
             .map(|e| e.path())
             .collect();
         if entries.is_empty() {

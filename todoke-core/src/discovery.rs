@@ -236,7 +236,7 @@ pub fn browse_blocking(deadline: Instant) -> Result<Vec<DeviceRecord>, Discovery
                 by_fullname.remove(&fullname);
             }
             Ok(_) => {}
-            Err(mdns_sd::RecvTimeoutError::Timeout) => continue,
+            Err(mdns_sd::RecvTimeoutError::Timeout) => {}
             Err(mdns_sd::RecvTimeoutError::Disconnected) => break,
         }
     }

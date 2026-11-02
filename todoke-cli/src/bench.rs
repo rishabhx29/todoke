@@ -381,11 +381,7 @@ fn scenario_resume(size_mb: u64) -> Result<BenchResult, String> {
             .map_err(|e| e.to_string())?;
         }
         let resumed = started.elapsed();
-        let second = receiver
-            .recv()
-            .await
-            .ok_or("receiver task ended early")?
-            .map_err(|e| e.to_string())?;
+        let second = receiver.recv().await.ok_or("receiver task ended early")??;
         if second != data.len() as u64 {
             return Err(format!(
                 "resumed transfer delivered {second} bytes, expected {}",

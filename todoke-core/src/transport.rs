@@ -55,6 +55,7 @@ pub enum TransportError {
 }
 
 /// The DNS name a device's certificate is issued for.
+#[must_use]
 pub fn device_dns_name(fingerprint: &str) -> String {
     let compact: String = fingerprint.chars().filter(|c| *c != '-').collect();
     let head: String = compact.chars().take(16).collect::<String>().to_lowercase();
@@ -196,6 +197,9 @@ impl Transport for quinn::Connection {
 }
 
 /// Bind a server endpoint advertising `identity`.
+// Async signature kept for API stability (a future quinn bind may await);
+// today's setup is synchronous.
+#[allow(clippy::unused_async)]
 pub async fn serve(
     identity: &ServerIdentity,
     addr: SocketAddr,

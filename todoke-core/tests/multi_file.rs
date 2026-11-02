@@ -105,7 +105,7 @@ fn build_fixture(root: &Path) {
             .join(format!("sub{}", i % 7));
         fs::create_dir_all(&dir).unwrap();
         let name = if i == 42 {
-            root.join(format!("greek/α-β-{}测量.dat", i))
+            root.join(format!("greek/α-β-{i}测量.dat"))
         } else if i == 43 {
             root.join("greek").join(&long_name)
         } else {

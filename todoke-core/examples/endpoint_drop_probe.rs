@@ -40,7 +40,7 @@ async fn main() {
             match tokio::time::timeout(std::time::Duration::from_secs(3), rx.read_exact(&mut buf))
                 .await
             {
-                Ok(Ok(_)) => println!("CASE B (endpoint dropped): roundtrip OK -> {buf:?}"),
+                Ok(Ok(())) => println!("CASE B (endpoint dropped): roundtrip OK -> {buf:?}"),
                 Ok(Err(e)) => println!("CASE B (endpoint dropped): stream error {e}"),
                 Err(_) => println!("CASE B (endpoint dropped): TIMEOUT"),
             }
