@@ -1,48 +1,34 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Todoke — Files that move. Free, open-source file sharing</title>
-  <meta name="description" content="Send files between devices at local-network speed. No cloud, no accounts, no size limits — free and open-source for Windows, macOS and Linux.">
+  <title>Todoke — Files that arrive. Free, open-source file sharing</title>
+  <meta name="description" content="Send files between devices at local-network speed, verified end-to-end. No cloud, no accounts, no size limits — free and open-source for Windows, macOS and Linux.">
   <link rel="canonical" href="https://todoke.tech/">
-
-  <!-- Social cards -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Todoke">
-  <meta property="og:title" content="Todoke — Files that move.">
-  <meta property="og:description" content="Send anything between devices at local-network speed. Free, open-source, no cloud, no accounts. Windows, macOS, Linux.">
-  <meta property="og:url" content="https://todoke.tech/">
-  <meta property="og:image" content="https://todoke.tech/img/og.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta property="og:image:alt" content="Todoke — Files that move. Free, open-source file sharing for Windows, macOS and Linux.">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Todoke — Files that move.">
-  <meta name="twitter:description" content="Send anything between devices at local-network speed. Free, open-source, no cloud, no accounts.">
-  <meta name="twitter:image" content="https://todoke.tech/img/og.png">
-
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "name": "Todoke",
-    "url": "https://todoke.tech/",
-    "description": "Free, open-source desktop app that sends files, folders and whole drives between devices at local-network speed. No cloud, no accounts, no size limits.",
-    "operatingSystem": "Windows, macOS, Linux",
-    "applicationCategory": "UtilitiesApplication",
-    "isAccessibleForFree": true,
-    "license": "MIT OR Apache-2.0",
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
-    "author": { "@type": "Organization", "name": "Todoke", "url": "https://github.com/todokeapp" }
-  }
-  </script>
-
-  <meta name="theme-color" content="#080D11">
+  <meta name="theme-color" content="#f7f6f2" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0c0d10" media="(prefers-color-scheme: dark)">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="icon" href="img/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+  <meta property="og:title" content="Todoke — Files that arrive.">
+  <meta property="og:description" content="Local-network speed, verified end-to-end. No cloud, no accounts, no size limits.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://todoke.tech/">
+  <meta property="og:image" content="https://todoke.tech/img/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Todoke — Files that arrive.">
+  <meta name="twitter:description" content="Local-network speed, verified end-to-end. No cloud, no accounts, no size limits.">
+  <meta name="twitter:image" content="https://todoke.tech/img/og.png">
   <link rel="stylesheet" href="css/style.css">
+  <script>
+    (function () {
+      var stored = null;
+      try { stored = localStorage.getItem("todoke-theme"); } catch (e) {}
+      var theme = stored || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -51,306 +37,173 @@
     <div class="wrap site-head__in">
       <a class="wordmark" href="#top" aria-label="Todoke — home">todoke<span class="wordmark__dash" aria-hidden="true"></span></a>
       <nav class="site-nav" aria-label="Site">
-        <a class="site-nav__link" href="#features">Why Todoke</a>
-        <a class="site-nav__link" href="#download">Download</a>
-        <a class="site-nav__link site-nav__link--ext" href="https://github.com/todokeapp/todoke" rel="me noopener">GitHub</a>
+        <a class="site-nav__link" href="#why">Why</a>
+        <a class="site-nav__link" href="#measured">Measured</a>
+        <a class="site-nav__link" href="#questions">Questions</a>
+        <button class="theme-toggle" type="button" aria-label="Switch color theme" data-theme-toggle>
+          <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="4.4" fill="none" stroke="currentColor" stroke-width="1.8"/><path stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 2.8v2.2M12 19v2.2M2.8 12h2.2M19 12h2.2M5.1 5.1l1.6 1.6M17.3 17.3l1.6 1.6M18.9 5.1l-1.6 1.6M6.7 17.3l-1.6 1.6"/></svg>
+          <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M20.6 14.6A8.6 8.6 0 0 1 9.4 3.4a.7.7 0 0 0-.9-.9 9.9 9.9 0 1 0 13 13 .7.7 0 0 0-.9-.9Z"/></svg>
+        </button>
         <a class="btn btn--primary btn--sm" href="#download">Get Todoke</a>
       </nav>
     </div>
   </header>
 
   <main id="main">
-
-    <!-- ============================================================ hero -->
     <section class="hero" id="top">
-      <canvas class="hero__canvas" id="hero-canvas" aria-hidden="true"></canvas>
       <div class="wrap hero__in">
-        <h1 class="hero__title">Files that move<span class="hero__dot" aria-hidden="true">.</span></h1>
-        <p class="hero__sub">40&nbsp;GB of trip pics, the whole semester folder, tonight’s 12&nbsp;GB render. Todoke sends it all straight to the device next to you at local-network speed. No cloud, no size limits, no accounts.</p>
+        <h1 class="hero__title">Files that arrive<span class="hero__dot" aria-hidden="true">.</span></h1>
+        <p class="hero__sub">40 GB of trip pics, the whole semester folder, tonight&rsquo;s 12&nbsp;GB render. Todoke sends it all straight to the device next to you at local-network speed — and proves every byte arrived.</p>
         <div class="hero__cta">
-          <a class="btn btn--primary" href="#download">Download Todoke</a>
+          <a class="btn btn--primary" href="#download">Get Todoke</a>
           <a class="btn btn--ghost" href="https://github.com/todokeapp/todoke" rel="noopener">Star on GitHub</a>
         </div>
+        <figure class="hero__shot">
+          <div class="window" aria-hidden="true">
+            <div class="window__bar"><span></span><span></span><span></span><span class="window__title">todoke — Devices</span></div>
+            <img src="img/gui-devices.png" alt="The Todoke app: Devices screen listing a nearby laptop" width="1679" loading="eager">
+          </div>
+          <figcaption>The actual app. Everything below is it doing its job.</figcaption>
+        </figure>
+      </div>
+    </section>
 
-        <div class="hero__streaks" aria-hidden="true">
-          <i class="hero__streak hero__streak--1"></i>
-          <i class="hero__streak hero__streak--2"></i>
-          <i class="hero__streak hero__streak--3"></i>
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee__track">
+        <span>local-network speed</span><i>—</i><span>verified end-to-end</span><i>—</i><span>no cloud</span><i>—</i><span>no accounts</span><i>—</i><span>resume forever</span><i>—</i><span>open source</span><i>—</i>
+        <span>local-network speed</span><i>—</i><span>verified end-to-end</span><i>—</i><span>no cloud</span><i>—</i><span>no accounts</span><i>—</i><span>resume forever</span><i>—</i><span>open source</span><i>—</i>
+      </div>
+    </div>
+
+    <section class="section" id="why" aria-labelledby="why-h">
+      <div class="wrap">
+        <header class="section__head">
+          <h2 class="section__title" id="why-h">What it does</h2>
+          <p class="section__lead">Four things, done properly. Everything else other apps bolt on — accounts, clouds, subscriptions — never touches you.</p>
+        </header>
+
+        <div class="blocks">
+          <article class="block">
+            <div class="block__shot">
+              <div class="window"><div class="window__bar"><span></span><span></span><span></span></div><img src="img/gui-devices.png" alt="Todoke Devices screen with a discovered laptop" loading="lazy" width="1679"></div>
+            </div>
+            <div class="block__copy">
+              <h3>It finds your people.</h3>
+              <p>Open Todoke on the same Wi-Fi and your devices simply appear — no accounts, no pairing ceremony, no QR scavenger hunt. Devices identify each other cryptographically, so the laptop you send to is your laptop.</p>
+            </div>
+          </article>
+
+          <article class="block block--flip">
+            <div class="block__shot">
+              <div class="window"><div class="window__bar"><span></span><span></span><span></span></div><img src="img/gui-send.png" alt="Todoke Send screen with file progress bars" loading="lazy" width="1679"></div>
+            </div>
+            <div class="block__copy">
+              <h3>Drag it over. Watch it move.</h3>
+              <p>Four parallel streams push your files at full wire speed, small files packed tight, progress to the byte. Your laptop falls asleep mid-transfer? Rerun the same command — it picks up exactly where the bytes stopped.</p>
+            </div>
+          </article>
+
+          <article class="block">
+            <div class="block__shot">
+              <div class="window"><div class="window__bar"><span></span><span></span><span></span></div><img src="img/gui-receive.png" alt="Todoke Receive screen with an incoming transfer log" loading="lazy" width="1679"></div>
+            </div>
+            <div class="block__copy">
+              <h3>Leave the lane open.</h3>
+              <p>Receive mode runs quietly and logs every arrival. Each transfer ends with a receipt — per-file BLAKE3 hashes you can check — so &ldquo;it sent fine&rdquo; becomes &ldquo;here&rsquo;s proof it arrived intact.&rdquo;</p>
+            </div>
+          </article>
+
+          <article class="block block--flip">
+            <div class="block__shot">
+              <div class="window"><div class="window__bar"><span></span><span></span><span></span></div><img src="img/gui-settings.png" alt="Todoke Settings screen with device identity" loading="lazy" width="1679"></div>
+            </div>
+            <div class="block__copy">
+              <h3>Yours, verifiably.</h3>
+              <p>Your device carries a cryptographic fingerprint you can read out loud over a call. No accounts means nothing to breach, nothing to sell, nothing phoning home. The whole engine is open source — audit it yourself.</p>
+            </div>
+          </article>
         </div>
 
-        <dl class="proof" data-reveal>
-          <div class="proof__cell">
-            <dt class="proof__k">Price</dt>
-            <dd class="proof__v">Free forever, no pro tier</dd>
-          </div>
-          <div class="proof__cell">
-            <dt class="proof__k">License</dt>
-            <dd class="proof__v">MIT OR Apache-2.0</dd>
-          </div>
-          <div class="proof__cell">
-            <dt class="proof__k">Platforms</dt>
-            <dd class="proof__v">Windows, macOS, Linux</dd>
-          </div>
-          <div class="proof__cell">
-            <dt class="proof__k">Your files</dt>
-            <dd class="proof__v">Never touch a server</dd>
-          </div>
+        <dl class="proof">
+          <div class="proof__item"><dt>Price</dt><dd>Free forever, no pro tier</dd></div>
+          <div class="proof__item"><dt>License</dt><dd>MIT OR Apache-2.0</dd></div>
+          <div class="proof__item"><dt>Platforms</dt><dd>Windows, macOS, Linux</dd></div>
+          <div class="proof__item"><dt>Your files</dt><dd>Never touch a server</dd></div>
         </dl>
       </div>
     </section>
 
-    <!-- ======================================================== features -->
-    <section class="section" id="features" aria-labelledby="features-h">
+    <section class="section section--measured" id="measured" aria-labelledby="measured-h">
       <div class="wrap">
-        <h2 class="section__title" id="features-h" data-reveal>Not another sharing app</h2>
-        <p class="section__lead" data-reveal style="--reveal-delay:80ms">Simple local sharing is a solved problem. Todoke is built for the transfers that hurt: huge, flaky, cross-network, or no app on the other end.</p>
-
-        <div class="features">
-
-          <article class="feature">
-            <div class="feature__body" data-reveal>
-              <h3 class="feature__title">Speed, with receipts</h3>
-              <p class="feature__copy">One stream is how other apps crawl through a Wi-Fi link. Todoke opens many in parallel, packs small files into batches, and skips bytes it has already sent. The benchmark harness that proves it ships with the engine, so every speed claim can be rerun.</p>
-            </div>
-            <div class="feature__motif" data-reveal style="--reveal-delay:120ms">
-              <svg class="motif motif--lanes" viewBox="0 0 320 150" aria-hidden="true" focusable="false">
-                <line class="lane lane--1" x1="0" y1="24" x2="320" y2="24"/>
-                <line class="lane lane--2" x1="0" y1="58" x2="320" y2="58"/>
-                <line class="lane lane--volt" x1="0" y1="92" x2="320" y2="92"/>
-                <line class="lane lane--3" x1="0" y1="126" x2="320" y2="126"/>
-              </svg>
-            </div>
-          </article>
-
-          <article class="feature feature--flip">
-            <div class="feature__body" data-reveal>
-              <h3 class="feature__title">A transfer that refuses to die</h3>
-              <p class="feature__copy">Close the lid, lose the Wi-Fi, reboot halfway through. Todoke picks up from the exact byte where it stopped, across sleeps, network switches, and restarts. Every file ends with a checksum receipt, so what landed is what left.</p>
-            </div>
-            <div class="feature__motif" data-reveal style="--reveal-delay:120ms">
-              <svg class="motif motif--resume" viewBox="0 0 320 150" aria-hidden="true" focusable="false">
-                <line class="resume__track" x1="8" y1="75" x2="312" y2="75"/>
-                <line class="resume__fill" x1="8" y1="75" x2="312" y2="75" pathLength="100"/>
-                <g class="resume__pulse">
-                  <circle cx="150" cy="75" r="5"/>
-                </g>
-                <text class="resume__label" x="8" y="116">sleep</text>
-                <text class="resume__label" x="196" y="116">network switch</text>
-              </svg>
-            </div>
-          </article>
-
-          <article class="feature">
-            <div class="feature__body" data-reveal>
-              <h3 class="feature__title">Your devices, one mesh</h3>
-              <p class="feature__copy">Pair your laptop, desktop, and the rest once and they stay connected, across the room or across networks. No cables, no uploads, no cloud sitting in the middle of your own files.</p>
-            </div>
-            <div class="feature__motif" data-reveal style="--reveal-delay:120ms">
-              <svg class="motif motif--mesh" viewBox="0 0 320 150" aria-hidden="true" focusable="false">
-                <path id="mesh-a" class="mesh__link" d="M62 108 L160 34 L258 108" fill="none"/>
-                <path id="mesh-b" class="mesh__link" d="M62 108 L160 122 L258 108" fill="none"/>
-                <path id="mesh-c" class="mesh__link" d="M160 34 L160 122" fill="none"/>
-                <g class="mesh__nodes">
-                  <circle class="mesh__node" cx="62" cy="108" r="7"/>
-                  <circle class="mesh__node" cx="258" cy="108" r="7"/>
-                  <circle class="mesh__node" cx="160" cy="122" r="7"/>
-                  <circle class="mesh__node mesh__node--volt" cx="160" cy="34" r="9"/>
-                </g>
-                <circle class="mesh__packet" r="4"/>
-                <circle class="mesh__packet mesh__packet--b" r="4"/>
-              </svg>
-            </div>
-          </article>
-
-          <article class="feature feature--flip">
-            <div class="feature__body" data-reveal>
-              <h3 class="feature__title">They don’t need to install anything</h3>
-              <p class="feature__copy">Sending to someone without Todoke? Show them a QR code and their browser becomes the receiver. Files still arrive verified, byte for byte. There’s also a portable single-file build that runs off a USB stick.</p>
-            </div>
-            <div class="feature__motif" data-reveal style="--reveal-delay:120ms">
-              <svg class="motif motif--qr" viewBox="0 0 320 150" aria-hidden="true" focusable="false">
-                <g class="qr__modules" transform="translate(112 11)">
-                  <rect x="0"   y="0"  width="12" height="12"/><rect x="24" y="0"  width="12" height="12"/>
-                  <rect x="48"  y="0"  width="12" height="12"/><rect x="84" y="0"  width="12" height="12"/>
-                  <rect x="0"   y="24" width="12" height="12"/><rect x="60" y="24" width="12" height="12"/>
-                  <rect x="96"  y="24" width="12" height="12"/><rect x="24" y="48" width="12" height="12"/>
-                  <rect x="72"  y="48" width="12" height="12"/><rect x="0"   y="48" width="12" height="12"/>
-                  <rect x="48"  y="72" width="12" height="12"/><rect x="84" y="72" width="12" height="12"/>
-                  <rect x="12"  y="96" width="12" height="12"/><rect x="36" y="96" width="12" height="12"/>
-                  <rect x="0"   y="120" width="12" height="12"/><rect x="60" y="120" width="12" height="12"/>
-                  <rect x="96"  y="120" width="12" height="12"/>
-                  <rect class="qr__hot" x="60" y="48" width="12" height="12"/>
-                  <rect class="qr__hot" x="24" y="72" width="12" height="12"/>
-                </g>
-                <g class="qr__finder">
-                  <rect x="112" y="11"  width="22" height="22" fill="none"/>
-                  <rect x="202" y="11"  width="22" height="22" fill="none"/>
-                  <rect x="112" y="121" width="22" height="22" fill="none"/>
-                </g>
-                <rect class="qr__scan" x="104" y="0" width="128" height="3" rx="1.5"/>
-              </svg>
-            </div>
-          </article>
-
+        <header class="section__head">
+          <h2 class="section__title" id="measured-h">Measured, not promised</h2>
+          <p class="section__lead">Every claim here comes from the built-in benchmark harness — same fixtures, same machine, rerunnable with one command. The numbers below are from a real laptop, release build, loopback.</p>
+        </header>
+        <div class="stats">
+          <div class="stat"><span class="stat__num" data-count="108" data-suffix=" MB/s">0 MB/s</span><span class="stat__label">big-file throughput</span><span class="stat__note">256 MB, 4 parallel streams</span></div>
+          <div class="stat"><span class="stat__num" data-count="2000" data-suffix=" files">0 files</span><span class="stat__label">moved in 2.8 s</span><span class="stat__note">2 KiB each — the photo-library case</span></div>
+          <div class="stat"><span class="stat__num" data-count="100" data-suffix="%">0%</span><span class="stat__label">of staged bytes skipped on resume</span><span class="stat__note">sleep mid-transfer, continue after</span></div>
+          <div class="stat"><span class="stat__num" data-count="0" data-suffix=" bytes">0 bytes</span><span class="stat__label">through our servers</span><span class="stat__note">there are no servers</span></div>
         </div>
+        <p class="measured__foot">Run it yourself: <code>todoke bench</code> — scenarios, fixtures and environment metadata ship in the repo. Loopback measures the engine; your NIC sets the LAN ceiling.</p>
       </div>
     </section>
 
-    <!-- ==================================================== how it works -->
-    <section class="section" id="how" aria-labelledby="how-h">
+    <section class="darkband" id="download" aria-labelledby="download-h">
       <div class="wrap">
-        <h2 class="section__title" id="how-h" data-reveal>Three steps, zero setup</h2>
-        <p class="section__lead" data-reveal style="--reveal-delay:80ms">No accounts to make, no rooms to join, no six-digit codes read aloud across the desk.</p>
-
-        <ol class="steps">
-          <li class="step" data-reveal>
-            <span class="step__num" aria-hidden="true">1</span>
-            <div>
-              <h3 class="step__title">Install the app</h3>
-              <p class="step__copy">A few megabytes on Windows, macOS, or Linux. No account, no setup wizard, no restart.</p>
-            </div>
-          </li>
-          <li class="step" data-reveal style="--reveal-delay:100ms">
-            <span class="step__num" aria-hidden="true">2</span>
-            <div>
-              <h3 class="step__title">Point it at the other device</h3>
-              <p class="step__copy">Devices on your network show up on their own. Somewhere else? Pair once and the mesh handles the rest.</p>
-            </div>
-          </li>
-          <li class="step" data-reveal style="--reveal-delay:200ms">
-            <span class="step__num" aria-hidden="true">3</span>
-            <div>
-              <h3 class="step__title">Send, then watch it land</h3>
-              <p class="step__copy">Pick your files and hit send. Progress per file, then a receipt that says every byte checked out.</p>
-            </div>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <!-- ===================================================== benchmarks -->
-    <section class="section" id="benchmarks" aria-labelledby="benchmarks-h">
-      <div class="wrap">
-        <h2 class="section__title" id="benchmarks-h" data-reveal>Fastest is a claim. Here come the numbers.</h2>
-        <p class="section__lead" data-reveal style="--reveal-delay:80ms">The benchmark harness is being built alongside the engine, because a speed claim without a rerunnable test is just marketing. When v1 ships, this section gets published results: Todoke against LocalSend and scp, across three scenarios.</p>
-
-        <ul class="bench" data-reveal style="--reveal-delay:140ms">
-          <li class="bench__row">
-            <span class="bench__scenario">One 20 GB file</span>
-            <span class="bench__slot" aria-hidden="true"></span>
-            <span class="bench__soon">measured soon</span>
-          </li>
-          <li class="bench__row">
-            <span class="bench__scenario">Ten thousand small files</span>
-            <span class="bench__slot" aria-hidden="true"></span>
-            <span class="bench__soon">measured soon</span>
-          </li>
-          <li class="bench__row">
-            <span class="bench__scenario">Resume after sleep</span>
-            <span class="bench__slot" aria-hidden="true"></span>
-            <span class="bench__soon">measured soon</span>
-          </li>
-        </ul>
-        <p class="bench__note" data-reveal style="--reveal-delay:200ms">Nothing above is a result. The moment real numbers exist, they land here with the script that produced them.</p>
-      </div>
-    </section>
-
-    <!-- ======================================================= download -->
-    <!--
-      Launch swap, one place: js/main.js holds the RELEASES constant and the
-      LAUNCHED flag. Pre-launch, the three buttons below are placeholder
-      anchors (no href) and the tiles carry "coming with v1". Flip LAUNCHED
-      to true (and fill in ASSETS) and every button goes live.
-    -->
-    <section class="section" id="download" aria-labelledby="download-h">
-      <div class="wrap">
-        <h2 class="section__title" id="download-h" data-reveal>Get Todoke</h2>
-        <p class="section__lead" data-reveal style="--reveal-delay:80ms">Free for Windows, macOS, and Linux. v1 isn’t published yet, so nothing below points at a download that doesn’t exist. Watch the repo, or leave your address and we’ll tell you the day it ships.</p>
-
-        <div class="dl" id="dl-grid" data-reveal style="--reveal-delay:140ms">
-          <article class="dl__os" data-os="windows">
-            <span class="dl__tag">coming with v1</span>
-            <h3 class="dl__name">Windows</h3>
-            <p class="dl__meta">Installer, a few megabytes.</p>
-            <a class="btn btn--primary" data-dl="windows">Download for Windows</a>
-          </article>
-          <article class="dl__os" data-os="macos">
-            <span class="dl__tag">coming with v1</span>
-            <h3 class="dl__name">macOS</h3>
-            <p class="dl__meta">Apple silicon and Intel.</p>
-            <a class="btn btn--primary" data-dl="macos">Download for macOS</a>
-          </article>
-          <article class="dl__os" data-os="linux">
-            <span class="dl__tag">coming with v1</span>
-            <h3 class="dl__name">Linux</h3>
-            <p class="dl__meta">AppImage and .deb.</p>
-            <a class="btn btn--primary" data-dl="linux">Download for Linux</a>
-          </article>
+        <h2 class="darkband__title" id="download-h">Install in one line</h2>
+        <p class="darkband__lead">Receive mode is the app&rsquo;s whole ritual: run it, and anything sent from a device on your network lands — verified.</p>
+        <div class="term" role="img" aria-label="Terminal showing todoke serve starting receive mode">
+          <div class="term__head"><span></span><span></span><span></span><span class="term__title">laptop — todoke</span></div>
+          <pre class="term__body"><code><span class="term__prompt">$</span> todoke serve --target ./incoming
+<span class="term__dim">Todoke is receiving as “study-laptop” (7C2A…) on 192.168.1.24</span>
+<span class="term__dim">Files land in ./incoming — Ctrl-C to stop</span>
+<span class="term__ok">✓ received 3 file(s), 1.2 GB — verified intact</span></code></pre>
         </div>
-
-        <div class="dl__wait" data-reveal style="--reveal-delay:200ms">
-          <a class="btn btn--ghost" href="mailto:hello@todoke.tech?subject=Tell%20me%20when%20Todoke%20ships">Tell me when it ships</a>
-          <a class="dl__watch" href="https://github.com/todokeapp/todoke" rel="noopener">or watch releases on GitHub</a>
+        <div class="dl-grid" id="dl-grid">
+          <a class="dl" href="https://github.com/todokeapp/todoke/releases" rel="noopener" data-os="windows">
+            <span class="dl__os">Windows</span><span class="dl__meta">Installer · x64</span><span class="dl__note">coming with v1</span>
+          </a>
+          <a class="dl" href="https://github.com/todokeapp/todoke/releases" rel="noopener" data-os="macos">
+            <span class="dl__os">macOS</span><span class="dl__meta">Apple silicon &amp; Intel</span><span class="dl__note">coming with v1</span>
+          </a>
+          <a class="dl" href="https://github.com/todokeapp/todoke/releases" rel="noopener" data-os="linux">
+            <span class="dl__os">Linux</span><span class="dl__meta">AppImage · .deb</span><span class="dl__note">coming with v1</span>
+          </a>
         </div>
+        <p class="darkband__fine">CLI today, desktop app landing with v1 — both free, both <a href="https://github.com/todokeapp/todoke" rel="noopener">open source</a>. Until then, star the repo and the buttons above come alive the day the first release ships.</p>
       </div>
     </section>
 
-    <!-- =========================================================== trust -->
-    <section class="section" id="trust" aria-labelledby="trust-h">
-      <div class="wrap">
-        <div class="trust">
-          <div class="trust__claim" data-reveal>
-            <h2 class="section__title" id="trust-h">Open source, open books</h2>
-            <p class="section__lead">Todoke is free software under MIT OR Apache-2.0. The whole thing lives on GitHub, the transfer engine is a separate crate you can read, and nothing about it phones home. You don’t have to take our word for any of that; the code is right there.</p>
-            <a class="btn btn--ghost trust__repo" href="https://github.com/todokeapp/todoke" rel="noopener">Read the source</a>
-          </div>
-          <ul class="trust__list">
-            <li class="trust__item" data-reveal>
-              <h3 class="trust__k">No cloud</h3>
-              <p class="trust__v">Transfers go device to device over your own networks. There is no server in the middle, because there is no server.</p>
-            </li>
-            <li class="trust__item" data-reveal style="--reveal-delay:80ms">
-              <h3 class="trust__k">No accounts</h3>
-              <p class="trust__v">Install, open, send. No sign-up, no email, no friends list to rebuild.</p>
-            </li>
-            <li class="trust__item" data-reveal style="--reveal-delay:160ms">
-              <h3 class="trust__k">No telemetry</h3>
-              <p class="trust__v">Nothing reports back, ever. The network tab is boring, and you can verify that yourself.</p>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============================================================= FAQ -->
-    <section class="section" id="faq" aria-labelledby="faq-h">
-      <div class="wrap">
-        <h2 class="section__title" id="faq-h" data-reveal>Questions people actually ask</h2>
-
-        <div class="faq" data-reveal style="--reveal-delay:80ms">
+    <section class="section" id="questions" aria-labelledby="faq-h">
+      <div class="wrap wrap--narrow">
+        <header class="section__head">
+          <h2 class="section__title" id="faq-h">Questions</h2>
+        </header>
+        <div class="faq">
           <details class="faq__item">
-            <summary class="faq__q">Is Todoke safe to use?</summary>
-            <div class="faq__a"><p>Yes, and verifiably so. Transfers run over TLS 1.3, every file arrives with a BLAKE3 checksum receipt so you know nothing was corrupted or swapped, and the entire codebase is open for inspection. There is no cloud component that could see your files even if it wanted to.</p></div>
+            <summary>Is it actually secure?</summary>
+            <p>Every connection is encrypted and pinned to the receiver&rsquo;s device key — an impostor can&rsquo;t impersonate your laptop, on your network or any other. Every chunk is hash-verified before it touches your disk, and the final receipt lists the BLAKE3 hash of every file. The engine is open source; the receipt is your proof.</p>
           </details>
           <details class="faq__item">
-            <summary class="faq__q">What happens if my laptop sleeps mid-transfer?</summary>
-            <div class="faq__a"><p>Nothing is lost. Todoke tracks progress per byte chunk, so it resumes exactly where it stopped across sleep, reboots, and network switches. You get a receipt at the end confirming every file checked out.</p></div>
+            <summary>What happens if my laptop falls asleep?</summary>
+            <p>Nothing is lost. Received chunks live in staging and survive restarts on both sides — rerun the same send and it reconciles what&rsquo;s already there, sending only the remainder. A transfer is never &ldquo;failed&rdquo;, just unfinished.</p>
           </details>
           <details class="faq__item">
-            <summary class="faq__q">Which platforms does it run on?</summary>
-            <div class="faq__a"><p>Windows, macOS (Apple silicon and Intel), and Linux at launch. Mobile comes later. If the person you’re sending to has none of those, their browser can receive via the QR-code web receiver.</p></div>
+            <summary>How is this different from LocalSend?</summary>
+            <p>LocalSend made same-network sharing mainstream — respect. Todoke competes on the dimensions it doesn&rsquo;t: parallel-stream throughput, resume across sleeps and network switches, per-file verification receipts, and a benchmark harness that publishes its own numbers instead of promising them.</p>
           </details>
           <details class="faq__item">
-            <summary class="faq__q">Is it really free? What’s the catch?</summary>
-            <div class="faq__a"><p>Free, entirely, forever, under MIT OR Apache-2.0. Todoke is serverless: your transfers never touch infrastructure we’d have to pay for, so there’s no pro tier, no ads, and no reason to charge.</p></div>
+            <summary>Does it work over the internet?</summary>
+            <p>Not yet. v1 is local-network — that&rsquo;s where the speed lives. Cross-network relaying is designed into the transport and lands after v1, same protocol, same receipts.</p>
           </details>
           <details class="faq__item">
-            <summary class="faq__q">How is this different from AirDrop or LocalSend?</summary>
-            <div class="faq__a"><p>AirDrop only works between Apple devices. LocalSend is good, but it opens a single stream and can’t resume a transfer your network dropped. Todoke opens many streams in parallel, resumes anything, keeps your paired devices connected across networks, and publishes benchmark results so the speed claim isn’t just talk.</p></div>
+            <summary>Why free? What&rsquo;s the catch?</summary>
+            <p>No accounts, no servers, no telemetry — free costs us almost nothing to run, and that makes it sustainable. The whole engine is dual-licensed MIT OR Apache-2.0. If it earns it, a donation button exists. That&rsquo;s the entire business model.</p>
           </details>
           <details class="faq__item">
-            <summary class="faq__q">Do we both need the app installed?</summary>
-            <div class="faq__a"><p>Only the sender does. The receiver scans a QR code and their browser handles the rest, verified bytes included.</p></div>
+            <summary>Which platforms can I trust today?</summary>
+            <p>Windows, macOS and Linux run the same engine with the same tests. The CLI works today; the desktop app lands with v1. Mobile comes later — the protocol was built for it from day one.</p>
           </details>
         </div>
       </div>
@@ -359,40 +212,19 @@
 
   <footer class="site-foot">
     <div class="wrap site-foot__in">
-      <div class="site-foot__grid">
-        <div class="site-foot__brand">
-          <a class="wordmark" href="#top" aria-label="Todoke — back to top">todoke<span class="wordmark__dash" aria-hidden="true"></span></a>
-          <p class="site-foot__tag">Files that move. Free, forever — MIT OR Apache-2.0, no cloud, no telemetry.</p>
-        </div>
-        <nav class="site-foot__col" aria-label="Site">
-          <h3 class="site-foot__h">Site</h3>
-          <a href="#features">Why Todoke</a>
-          <a href="#benchmarks">Benchmarks</a>
-          <a href="#download">Download</a>
-          <a href="#faq">FAQ</a>
-        </nav>
-        <nav class="site-foot__col" aria-label="Project">
-          <h3 class="site-foot__h">Project</h3>
-          <a href="https://github.com/todokeapp/todoke" rel="noopener">GitHub</a>
-          <a href="https://github.com/todokeapp/todoke/releases" rel="noopener">Releases</a>
-          <a href="https://github.com/todokeapp/todoke/blob/main/LICENSE" rel="noopener">License</a>
-        </nav>
-        <div class="site-foot__col">
-          <h3 class="site-foot__h">Contact</h3>
-          <a href="mailto:hello@todoke.tech">hello@todoke.tech</a>
-          <span class="site-foot__static">todoke.tech</span>
-        </div>
+      <div class="site-foot__brand">
+        <a class="wordmark" href="#top" aria-label="Todoke — back to top">todoke<span class="wordmark__dash" aria-hidden="true"></span></a>
+        <p class="site-foot__tag">Files that arrive. Free, forever — MIT OR Apache-2.0, no cloud, no telemetry.</p>
       </div>
+      <nav class="site-foot__links" aria-label="Footer">
+        <a href="https://github.com/todokeapp/todoke" rel="noopener">GitHub</a>
+        <a href="https://github.com/todokeapp/todoke" rel="noopener">License</a>
+        <a href="mailto:hello@todoke.tech">hello@todoke.tech</a>
+      </nav>
       <p class="site-foot__fine">© <span id="year">2026</span> Todoke. v1 in the works — follow along on GitHub.</p>
     </div>
   </footer>
 
-  <script src="vendor/gsap/gsap.min.js" defer></script>
-  <script src="vendor/gsap/CustomEase.min.js" defer></script>
-  <script src="vendor/gsap/ScrollTrigger.min.js" defer></script>
-  <script src="vendor/lenis/lenis.min.js" defer></script>
-  <script src="vendor/anime/anime.min.js" defer></script>
   <script src="js/main.js" defer></script>
-  <script type="module" src="js/hero3d.js"></script>
 </body>
 </html>

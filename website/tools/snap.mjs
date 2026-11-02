@@ -30,6 +30,8 @@ const reduced = args.includes("--reduced-motion");
 const wantConsole = args.includes("--console");
 const fullPage = args.includes("--full");
 const atIdx = args.indexOf("--at");
+const themeIdx = args.indexOf("--theme");
+const theme = themeIdx !== -1 ? args[themeIdx + 1] : null;
 const at = atIdx !== -1 ? args[atIdx + 1] : null; // CSS selector or Y px
 
 const MIME = { ".html": "text/html; charset=utf-8", ".css": "text/css",
@@ -98,6 +100,8 @@ function send(method, params = {}) {
 
 await send("Page.enable");
 await send("Log.enable");
+await send("Network.enable");
+await send("Network.setCacheDisabled", { cacheDisabled: true });
 await send("Runtime.enable");
 await send("Emulation.setDeviceMetricsOverride", {
   width, height, deviceScaleFactor: 2, mobile: width < 700,
@@ -107,20 +111,35 @@ if (reduced) {
     features: [{ name: "prefers-reduced-motion", value: "reduce" }],
   });
 }
+await send("Runtime.enable");
 await send("Page.navigate", { url: `http://127.0.0.1:${SITE_PORT}/` });
-await new Promise((r) => setTimeout(r, 1500));
+await new Promise((r) => setTimeout(r, 1200));
+if (theme) {
+  // set on the real origin, then reload so the head script reads it
+  await send("Runtime.evaluate", { expression: `localStorage.setItem("todoke-theme", "${theme}")` });
+  await send("Page.reload");
+  await new Promise((r) => setTimeout(r, 1500));
+}
 
 if (at) {
   // scroll to a selector (e.g. "#how") or a Y px value, let reveals settle
   await send("Runtime.evaluate", {
     expression: `(async () => {
+      window.__todokeLenisDestroy?.();
       document.documentElement.style.scrollBehavior = 'auto';
-      const t = ${JSON.stringify(at)};
-      const el = document.querySelector(t);
-      scrollTo(0, el ? el.getBoundingClientRect().top + scrollY : Number(t) || 0);
+      const raw = ${JSON.stringify(at)};
+      let targetY = Number(raw);
+      if (!Number.isFinite(targetY)) {
+        try {
+          const el = document.querySelector(raw);
+          if (el) targetY = el.getBoundingClientRect().top + scrollY;
+        } catch (e) { /* bad selector: stay put */ }
+      }
+      scrollTo(0, targetY);
+      await new Promise((r) => setTimeout(r, 400));
     })()`,
     awaitPromise: true,
-  });
+  }).then((r) => console.log("AT-DEBUG:", JSON.stringify(r.result ?? r)));
   // long enough for batched reveals (1.4 s tween + stagger) to finish
   await new Promise((r) => setTimeout(r, 3400));
 }
