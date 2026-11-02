@@ -99,7 +99,7 @@ enum Command {
     },
     /// Run benchmark scenarios against the engine
     Bench {
-        /// Scenario: big-file | many-small | resume (default: all)
+        /// Scenario: copy-baseline | big-file | many-small | resume (default: all)
         #[arg(long)]
         scenario: Option<String>,
         /// Write results as JSON to this file
@@ -114,7 +114,10 @@ fn data_dir() -> Result<PathBuf, String> {
     }
     dirs::data_dir()
         .map(|d| d.join("todoke"))
-        .ok_or_else(|| "could not locate the app-data directory".to_string())
+        .ok_or_else(|| {
+            "could not locate the OS app-data directory — set TODOKE_DATA_DIR to a folder to use instead"
+                .to_string()
+        })
 }
 
 fn fail(msg: &str) -> ! {
@@ -124,7 +127,12 @@ fn fail(msg: &str) -> ! {
 
 fn load_identity() -> DeviceIdentity {
     let dir = data_dir().unwrap_or_else(|e| fail(&e));
-    DeviceIdentity::load_or_create(&dir).unwrap_or_else(|e| fail(&format!("identity: {e}")))
+    DeviceIdentity::load_or_create(&dir).unwrap_or_else(|e| {
+        fail(&format!(
+            "could not load or create the device identity in {}: {e}",
+            dir.display()
+        ))
+    })
 }
 
 fn decode_cert(record: &DeviceRecord) -> CertificateDer<'static> {
@@ -138,7 +146,12 @@ fn decode_cert(record: &DeviceRecord) -> CertificateDer<'static> {
 fn find_device(name_or_fp: &str, secs: u64) -> Result<DeviceRecord, String> {
     let needle = name_or_fp.to_lowercase();
     let records = discovery::browse_blocking(std::time::Instant::now() + Duration::from_secs(secs))
-        .map_err(|e| format!("discovery failed: {e}"))?;
+        .map_err(|e| {
+            format!(
+                "discovery failed: {e} — check this machine has an active network connection \
+                 (Windows Firewall blocks mDNS from unsigned binaries; see the README's firewall note)"
+            )
+        })?;
     let matches: Vec<&DeviceRecord> = records
         .iter()
         .filter(|r| {
@@ -215,9 +228,13 @@ fn main() {
 }
 
 fn devices(timeout: u64, json: bool) {
-    let records =
-        discovery::browse_blocking(std::time::Instant::now() + Duration::from_secs(timeout))
-            .unwrap_or_else(|e| fail(&format!("discovery failed: {e}")));
+    let records = discovery::browse_blocking(std::time::Instant::now() + Duration::from_secs(timeout))
+        .unwrap_or_else(|e| {
+            fail(&format!(
+                "discovery failed: {e} — check this machine has an active network connection \
+                 (Windows Firewall blocks mDNS from unsigned binaries; see the README's firewall note)"
+            ))
+        });
     if json {
         let list: Vec<serde_json::Value> = records
             .iter()
@@ -239,12 +256,7 @@ fn devices(timeout: u64, json: bool) {
         );
         return;
     }
-    println!(
-        "{:<22} {:<12} {}",
-        "NAME",
-        "FINGERPRINT",
-        concat!("ADD", "R")
-    );
+    println!("{:<22} {:<12} ADDR", "NAME", "FINGERPRINT");
     for r in &records {
         println!(
             "{:<22} {:<12} {}:{}",
@@ -254,6 +266,25 @@ fn devices(timeout: u64, json: bool) {
             r.port
         );
     }
+}
+
+/// Cheap guard: does this input contain at least one real file? Empty files
+/// count (they transfer cleanly); a directory tree of only empty folders
+/// produces a zero-file manifest, which is almost always a mistake.
+fn any_file_under(path: &Path) -> bool {
+    if path.is_file() {
+        return true;
+    }
+    let Ok(entries) = std::fs::read_dir(path) else {
+        return false;
+    };
+    for entry in entries.filter_map(|e| e.ok()) {
+        let p = entry.path();
+        if any_file_under(&p) {
+            return true;
+        }
+    }
+    false
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -267,10 +298,28 @@ fn send(
     discovery_secs: u64,
     json: bool,
 ) {
+    let mut has_files = false;
     for p in &paths {
-        if !p.exists() {
-            fail(&format!("path not found: {}", p.display()));
+        if p.as_os_str().is_empty() {
+            fail("empty path given — name the file or folder to send");
         }
+        if !p.exists() {
+            fail(&format!(
+                "path not found: {} — check the spelling and your working directory",
+                p.display()
+            ));
+        }
+        has_files |= any_file_under(p);
+    }
+    if !has_files {
+        let list = paths
+            .iter()
+            .map(|p| format!("'{}'", p.display()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        fail(&format!(
+            "nothing to send: {list} contains no files (only empty folders)"
+        ));
     }
     let (record, dest_name, dest_fp) = if let Some(name) = &to {
         let record = find_device(name, discovery_secs).unwrap_or_else(|e| fail(&e));
@@ -281,9 +330,11 @@ fn send(
         let (Some(addr), Some(fp), Some(cert)) = (&addr, &fingerprint, &cert_b64) else {
             fail("specify either --to <device> or all of --addr, --fingerprint and --cert-b64");
         };
-        let parsed: std::net::SocketAddr = addr
-            .parse()
-            .unwrap_or_else(|e| fail(&format!("invalid --addr: {e}")));
+        let parsed: std::net::SocketAddr = addr.parse().unwrap_or_else(|e| {
+            fail(&format!(
+                "invalid --addr '{addr}': {e} (expected ip:port, e.g. 192.168.1.20:45000)"
+            ))
+        });
         let record = DeviceRecord {
             name: addr.clone(),
             fingerprint: fp.clone(),
@@ -302,9 +353,7 @@ fn send(
     let runtime = tokio::runtime::Runtime::new().unwrap_or_else(|e| fail(&format!("runtime: {e}")));
     let result = runtime.block_on(async move {
         let peer = std::net::SocketAddr::from((record.addr, record.port));
-        eprintln!("DBG send: dialing {peer} (fp {})", record.fingerprint);
         let (_endpoint, conn) = transport::dial(peer, &record.fingerprint, cert).await?;
-        eprintln!("DBG send: connected");
         let sender = SenderInfo {
             name: identity.name().to_owned(),
             fingerprint: identity.fingerprint(),
@@ -412,17 +461,22 @@ fn serve(
     if let Some(name) = &name {
         identity
             .set_name(name.clone())
-            .unwrap_or_else(|e| fail(&format!("rename: {e}")));
+            .unwrap_or_else(|e| fail(&format!("could not set the device name to '{name}': {e}")));
     }
     ensure_target(&target);
     let runtime = tokio::runtime::Runtime::new().unwrap_or_else(|e| fail(&format!("runtime: {e}")));
     runtime.block_on(async move {
-        let server_identity = transport::server_identity(&identity)
-            .unwrap_or_else(|e| fail(&format!("identity cert: {e}")));
+        let server_identity = transport::server_identity(&identity).unwrap_or_else(|e| {
+            fail(&format!(
+                "could not build the serving certificate from the device identity: {e}"
+            ))
+        });
         let fingerprint = identity.fingerprint();
         let (endpoint, addr) = transport::serve(&server_identity, "0.0.0.0:0".parse().unwrap())
             .await
-            .unwrap_or_else(|e| fail(&format!("cannot bind: {e}")));
+            .unwrap_or_else(|e| {
+                fail(&format!("could not bind the QUIC listener (0.0.0.0:0): {e}"))
+            });
 
         let advertiser = discovery::Advertiser::advertise_on(
             &identity,
@@ -525,6 +579,9 @@ fn print_receipt(receipt: &Receipt, json: bool) {
 /// device never shows up on the network while unable to receive.
 fn ensure_target(target: &Path) {
     if let Err(e) = std::fs::create_dir_all(target) {
-        fail(&format!("target dir {}: {e}", target.display()));
+        fail(&format!(
+            "target dir {}: {e} — check the path is writable (and is not an existing file)",
+            target.display()
+        ));
     }
 }

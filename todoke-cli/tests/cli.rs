@@ -163,6 +163,42 @@ fn send_to_unknown_device_fails_with_guidance() {
     );
 }
 
+#[test]
+fn send_missing_path_fails_with_guidance() {
+    let data = tmpdir("missingpath-data");
+    let out = Command::cargo_bin("todoke")
+        .unwrap()
+        .args(["send", "does-not-exist-anywhere.txt"])
+        .env("TODOKE_DATA_DIR", &data)
+        .output()
+        .unwrap();
+    assert!(!out.status.success(), "missing path must fail");
+    let err = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        err.contains("path not found"),
+        "stderr should explain: {err}"
+    );
+}
+
+#[test]
+fn send_only_empty_directories_fails_with_nothing_to_send() {
+    let data = tmpdir("emptydir-data");
+    let src = tmpdir("emptydir-src");
+    fs::create_dir_all(src.join("only-empty/inner")).unwrap();
+    let out = Command::cargo_bin("todoke")
+        .unwrap()
+        .args(["send", src.join("only-empty").to_str().unwrap()])
+        .env("TODOKE_DATA_DIR", &data)
+        .output()
+        .unwrap();
+    assert!(!out.status.success(), "a file-less input set must fail");
+    let err = String::from_utf8_lossy(&out.stderr);
+    assert!(
+        err.contains("nothing to send"),
+        "stderr should explain: {err}"
+    );
+}
+
 /// Read one line from the child's stdout with a hard deadline: a blocked
 /// read() can't be interrupted by a deadline check between reads, so the
 /// reader runs on a thread and we bail via channel timeout.
