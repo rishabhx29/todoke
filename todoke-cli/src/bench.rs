@@ -22,10 +22,11 @@ use std::{
 
 use serde::Serialize;
 use todoke_core::transport::CertificateDer;
-
 use todoke_core::{
-    chunk::hash_reader,
+    chunk::{ChunkParams, hash_reader},
     identity::DeviceIdentity,
+    manifest::{Manifest, build_manifest},
+    protocol::{Envelope, Message, read_message, write_data_frame, write_message},
     transfer::{self, ReceiveOptions, SenderInfo},
     transport,
 };
@@ -177,7 +178,6 @@ fn scenario_big_file(size_mb: u64) -> Result<BenchResult, String> {
     let src = temp_root("bf-src");
     let data = pseudo_bytes(0xB16, size_mb as usize * 1024 * 1024);
     let file = write_fixture(&src, "big.dat", &data);
-    let expected = hash_reader(fs::File::open(&file).unwrap()).map_err(|e| e.to_string())?;
 
     let runtime = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
     let started = Instant::now();
@@ -188,10 +188,8 @@ fn scenario_big_file(size_mb: u64) -> Result<BenchResult, String> {
         loopback_transfer(&identity, &server_id, &[file], 4).await
     })?;
     let result = to_result("big-file", bytes, started, "loopback, 4 streams");
-    // Integrity is part of the benchmark: a corrupted run is a failed run.
-    let got_path = temp_root("bench-target");
-    let _ = got_path; // receiver temp is cleaned inside; hash verified in-transfer
-    drop(expected);
+    // Integrity is part of the benchmark: the receiver whole-file-verifies
+    // before finalizing, so a corrupted run already failed above.
     Ok(result)
 }
 
@@ -220,37 +218,200 @@ fn scenario_many_small() -> Result<BenchResult, String> {
     ))
 }
 
+/// A receiver endpoint that serves `sessions` consecutive receive sessions
+/// with the same target/staging (a restarted receiver process). Each
+/// session's outcome arrives on the channel as it finishes.
+async fn serve_sessions(
+    server_id: transport::ServerIdentity,
+    opts: ReceiveOptions,
+    sessions: usize,
+) -> (
+    std::net::SocketAddr,
+    tokio::sync::mpsc::UnboundedReceiver<Result<u64, String>>,
+) {
+    let (endpoint, addr) = transport::serve(&server_id, "127.0.0.1:0".parse().unwrap())
+        .await
+        .unwrap();
+    let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+    tokio::spawn(async move {
+        for _ in 0..sessions {
+            let outcome = async {
+                let incoming =
+                    endpoint
+                        .accept()
+                        .await
+                        .ok_or(transfer::TransferError::ConnectionLost(
+                            "no incoming connection".into(),
+                        ))?;
+                let conn = incoming
+                    .await
+                    .map_err(|e| transfer::TransferError::ConnectionLost(e.to_string()))?;
+                transfer::receive(&conn, &opts)
+                    .await
+                    .map(|r| r.files.iter().map(|f| f.size).sum::<u64>())
+            }
+            .await;
+            let _ = tx.send(outcome.map_err(|e| e.to_string()));
+        }
+    });
+    (addr, rx)
+}
+
+/// Raw session-1 sender: handshake, send the first `send_chunks` chunks of
+/// the file, then break the session with a sentinel frame the receiver
+/// rejects (file index past the manifest). The receiver processes frames in
+/// order, so the moment it fails, exactly `send_chunks` chunks are staged —
+/// the resumed session's numbers are reproducible, not timing-dependent.
+async fn rogue_partial<T: transport::Transport>(
+    conn: &T,
+    peer_fp: &str,
+    manifest: &Manifest,
+    source: &Path,
+    send_chunks: usize,
+) {
+    let (mut ctl_tx, mut ctl_rx) = conn.open_bi().await.unwrap();
+    write_message(
+        &mut ctl_tx,
+        &Envelope::new(Message::Hello {
+            name: "rogue".into(),
+            fingerprint: peer_fp.to_string(),
+        }),
+    )
+    .await
+    .unwrap();
+    write_message(
+        &mut ctl_tx,
+        &Envelope::new(Message::Offer {
+            manifest: manifest.clone(),
+        }),
+    )
+    .await
+    .unwrap();
+    match read_message(&mut ctl_rx).await.unwrap().message {
+        Message::Accept { .. } => {}
+        other => panic!("expected Accept, got {other:?}"),
+    }
+    let (mut data_tx, _data_rx) = conn.open_bi().await.unwrap();
+    let mut f = fs::File::open(source).unwrap();
+    use std::io::{Read, Seek, SeekFrom};
+    for (ci, chunk) in manifest.files[0]
+        .chunks
+        .iter()
+        .take(send_chunks)
+        .enumerate()
+    {
+        let mut buf = vec![0u8; chunk.length as usize];
+        f.seek(SeekFrom::Start(chunk.offset)).unwrap();
+        f.read_exact(&mut buf).unwrap();
+        write_data_frame(&mut data_tx, 0, ci as u32, &buf)
+            .await
+            .unwrap();
+    }
+    write_data_frame(&mut data_tx, u32::MAX, 0, b"sentinel")
+        .await
+        .unwrap();
+}
+
 /// Scenario: interrupted transfer — resume must beat restarting from zero.
-/// Transfers 32 MB, kills the session at ~40%, then measures the resumed
-/// completion; for comparison, a full 32 MB transfer from scratch is timed
-/// separately and reported in the notes.
+/// Drives a real kill-and-resume through the engine API over loopback: a
+/// session carrying ~40% of the file breaks, then a full `send_with`
+/// reconciles against the staged chunks and completes. Reports the resumed
+/// session's time; the notes carry the measured full-restart cost that
+/// resume avoided.
 fn scenario_resume(size_mb: u64) -> Result<BenchResult, String> {
     let src = temp_root("rs-src");
     let data = pseudo_bytes(0x42, size_mb as usize * 1024 * 1024);
     let file = write_fixture(&src, "resume.dat", &data);
 
-    // Reference: full transfer time (what a restart would pay again).
     let runtime = tokio::runtime::Runtime::new().map_err(|e| e.to_string())?;
-    let full = runtime.block_on(async {
+    let (full, resumed, staged_fraction) = runtime.block_on(async {
         let identity =
-            DeviceIdentity::load_or_create(&temp_root("rs-id-full")).map_err(|e| e.to_string())?;
+            DeviceIdentity::load_or_create(&temp_root("rs-id")).map_err(|e| e.to_string())?;
         let server_id = transport::server_identity(&identity).map_err(|e| e.to_string())?;
+        let fingerprint = identity.fingerprint();
+        let cert = CertificateDer::from(server_id.cert_der().to_vec());
+
+        // Reference: full transfer time (what a restart would pay again).
         let started = Instant::now();
         loopback_transfer(&identity, &server_id, std::slice::from_ref(&file), 4).await?;
-        Ok::<_, String>(started.elapsed())
-    })?;
+        let full = started.elapsed();
 
-    // TODO(07-follow-up): drive the kill-and-resume through the CLI so the
-    // staged state crosses a process boundary (the engine's resume path is
-    // covered by todoke-core's resume tests). Until then this scenario
-    // reports the restart cost that resume avoids.
+        // Kill-and-resume: two sessions on the same target/staging.
+        let target = temp_root("rs-target");
+        let staging = temp_root("rs-staging");
+        let opts = ReceiveOptions::new(target.clone(), staging);
+        let (addr, mut receiver) = serve_sessions(server_id, opts, 2).await;
+
+        // Session 1: ~40% of the chunks, then the session breaks.
+        let manifest = build_manifest(std::slice::from_ref(&file), &ChunkParams::default())
+            .map_err(|e| e.to_string())?;
+        let total_chunks = manifest.files[0].chunks.len();
+        let partial = total_chunks * 2 / 5;
+        {
+            let (_ep, conn) = transport::dial(addr, &fingerprint, cert.clone())
+                .await
+                .map_err(|e| e.to_string())?;
+            rogue_partial(&conn, &fingerprint, &manifest, &file, partial).await;
+            // The receiver fails on the sentinel (expected for a broken
+            // session); only then may the connection go away.
+            let first = receiver.recv().await.unwrap();
+            debug_assert!(first.is_err(), "broken session must fail: {first:?}");
+        }
+
+        // Session 2: a real send reconciles against the staged chunks and
+        // completes the transfer — time only the resumed session.
+        let started = Instant::now();
+        {
+            let (_ep, conn) = transport::dial(addr, &fingerprint, cert)
+                .await
+                .map_err(|e| e.to_string())?;
+            transfer::send_with(
+                &conn,
+                std::slice::from_ref(&file),
+                &SenderInfo {
+                    name: "bench".into(),
+                    fingerprint: fingerprint.clone(),
+                },
+                &transfer::SendOptions {
+                    parallelism: 4,
+                    progress: None,
+                },
+            )
+            .await
+            .map_err(|e| e.to_string())?;
+        }
+        let resumed = started.elapsed();
+        let second = receiver
+            .recv()
+            .await
+            .ok_or("receiver task ended early")?
+            .map_err(|e| e.to_string())?;
+        if second != data.len() as u64 {
+            return Err(format!(
+                "resumed transfer delivered {second} bytes, expected {}",
+                data.len()
+            ));
+        }
+        // Integrity is part of the benchmark: the resumed file must be
+        // byte-identical (whole-file hash from the manifest, which was
+        // itself derived from the source content).
+        let got = target.join("resume.dat");
+        let got_hash = hash_reader(fs::File::open(&got).map_err(|e| e.to_string())?)
+            .map_err(|e| e.to_string())?;
+        if got_hash != manifest.files[0].hash {
+            return Err("resumed transfer produced a corrupt file".to_string());
+        }
+        Ok::<_, String>((full, resumed, partial as f64 / total_chunks.max(1) as f64))
+    })?;
     Ok(BenchResult {
         scenario: "resume".into(),
         bytes: data.len() as u64,
-        elapsed_ms: full.as_millis(),
-        throughput_mbps: mb(data.len() as u64) / full.as_secs_f64().max(0.001),
+        elapsed_ms: resumed.as_millis(),
+        throughput_mbps: mb(data.len() as u64) / resumed.as_secs_f64().max(0.001),
         notes: format!(
-            "loopback, restart cost for {size_mb} MB = {:?}; resume skip-proof in todoke-core resume tests",
+            "loopback, session killed after ~{:.0}% of chunks; resume = {:?} vs full restart = {:?}",
+            staged_fraction * 100.0,
+            resumed,
             full
         ),
     })
@@ -321,7 +482,7 @@ pub fn run(scenario: Option<&str>, size_mb: u64) -> Result<BenchReport, String> 
     }
     if report.results.is_empty() {
         return Err(format!(
-            "unknown scenario '{}' (big-file | many-small | resume)",
+            "unknown scenario '{}' (copy-baseline | big-file | many-small | resume)",
             scenario.unwrap_or("")
         ));
     }
