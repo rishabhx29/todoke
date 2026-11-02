@@ -98,14 +98,16 @@ function send(method, params = {}) {
   });
 }
 
+const dsfIdx = args.indexOf("--dsf");
 await send("Page.enable");
 await send("Log.enable");
 await send("Network.enable");
 await send("Network.setCacheDisabled", { cacheDisabled: true });
 await send("Runtime.enable");
 await send("Emulation.setDeviceMetricsOverride", {
-  width, height, deviceScaleFactor: 2, mobile: width < 700,
+  width, height, deviceScaleFactor: dsfIdx !== -1 ? Number(args[dsfIdx + 1]) : 2, mobile: width < 700,
 });
+await send("Emulation.setScrollbarsHidden", { hidden: true });
 if (reduced) {
   await send("Emulation.setEmulatedMedia", {
     features: [{ name: "prefers-reduced-motion", value: "reduce" }],

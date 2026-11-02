@@ -2,7 +2,7 @@
 
 The todoke.tech landing site. Zero-build static: semantic HTML, vanilla CSS, a little vanilla JS. No framework, no bundler, no CDN — point any static host at this directory and it ships.
 
-**Files that move.** Free, open-source, cross-platform file sharing.
+**Files that arrive.** Free, open-source, cross-platform file sharing.
 
 ## Structure
 
@@ -10,13 +10,17 @@ The todoke.tech landing site. Zero-build static: semantic HTML, vanilla CSS, a l
 website/
   index.html        the landing page (single page; sections are anchors)
   css/style.css     design system + all styles (tokens at the top)
-  js/main.js        progressive enhancement only — page works without it
-  fonts/            self-hosted Archivo Variable (latin subset, woff2)
-  img/              favicons + og.png social card
+  js/main.js        choreography: Lenis + GSAP scrubs + anime.js counters (page works without it)
+  js/hero3d.js      Three.js packet-stream hero (lazy: loads only when visible + motion OK)
+  fonts/            self-hosted woff2: Bricolage Grotesque (text), Instrument Serif
+                    + italic (display), JetBrains Mono (labels) — latin subsets
+  img/              favicons + og.png social card (regen PNGs: node tools/gen-icons.mjs)
+  vendor/           gsap 3.12 (+ ScrollTrigger, CustomEase), lenis 1.1 (ESM),
+                    anime.js 3.2, three 0.170 (lazy) — all local, no CDN
   robots.txt        allow all + sitemap pointer
   sitemap.xml       single-page sitemap
   check.mjs         zero-dependency checker (see below)
-  tools/snap.mjs    headless-Chrome screenshot probe (viewport + full page)
+  tools/snap.mjs    headless-Chrome screenshot probe (viewport + full page, --dsf, scrollbars hidden)
   .shots/           local screenshots + lighthouse output (gitignored)
 ```
 
@@ -35,30 +39,18 @@ The checker exits non-zero on errors, so it can gate commits or CI later.
 ## Edit content
 
 - **Copy** — all text lives in `index.html` as plain semantic HTML. No template, no build: edit, save, deploy.
-- **Colors, type, spacing, motion** — design tokens at the top of `css/style.css` (`:root`). One electric accent (`--volt`); everything derives from tokens. One easing language (`--ease-out` + `--dur-*`); new motion should read from those tokens and must respect `prefers-reduced-motion` (the global reduce rule collapses transitions/animations automatically).
-- **Meta/social** — `<head>` of `index.html` (title, description, OpenGraph/Twitter, canonical, JSON-LD). The social card image is `img/og.png` (1200x630).
+- **Colors, type, spacing, motion** — design tokens at the top of `css/style.css` (`:root`): cream paper `--paper`, ink `--ink`, one coral accent family (`--coral` fills / `--coral-text` small text / `--coral-big` large serif), night band tokens for the download + footer. Display type is Instrument Serif (italic = the accent voice); text is Bricolage Grotesque; labels/terminal are JetBrains Mono. One easing language (`--ease`); new motion should read from those tokens and must respect `prefers-reduced-motion` (the global reduce rule collapses transitions/animations automatically).
+- **Meta/social** — `<head>` of `index.html` (title, description, OpenGraph/Twitter, canonical, JSON-LD). The social card image is `img/og.png` (1200x630; regenerate with `node tools/snap.mjs 1200,630 img/og.png --dsf 1`).
 
 ### Launch day: download links
 
-Everything lives in one block at the top of `js/main.js`:
+The three OS tiles in the download band live in `index.html` (search `dl-grid`).
+They all point at the GitHub releases page and carry a "coming with v1" tag:
 
-```js
-var RELEASES = "https://github.com/todokeapp/todoke/releases";
-var LAUNCHED = false;
-var ASSETS = { windows: "...", macos: "...", linux: "..." };
-```
-
-1. Set `LAUNCHED = true`. Every OS button gets wired automatically and the
-   "coming with v1" tags disappear.
-2. Optional: fill `ASSETS` with the real release filenames for direct
-   `releases/latest/download/<file>` links. Left as placeholders, buttons
-   land on the latest-release page instead.
-3. Different org/repo? Change `RELEASES` and the few hardcoded GitHub URLs
-   in `index.html` (header, hero, trust, footer) — search for `todokeapp`.
-
-Pre-launch, the buttons are placeholder anchors (no href): they render but
-nothing links to a 404. The waitlist CTA is a mailto — swap in a form-service
-URL at deploy time if you want capture instead of email.
+1. On launch, replace each tile's `href` with the real asset URL
+   (`https://github.com/todokeapp/todoke/releases/latest/download/<file>`).
+2. Delete the `<span class="dl__note">` lines.
+3. Different org/repo? Search `index.html` for `todokeapp` and swap the URLs.
 
 ## Verify before shipping
 
@@ -100,4 +92,8 @@ Any other static server (nginx, `python -m http.server`, Netlify drop) works the
 
 ## Page-weight budget
 
-The whole page stays under ~200 KB (font + CSS + JS + HTML included). When adding anything heavy, lazy-load it and re-run `node check.mjs` plus a Lighthouse mobile pass before shipping.
+First load is ~200 KB over the wire (fonts are 151 KB of it; HTML/CSS/JS gzip
+down hard; three.js ~690 KB is lazy and only downloads when the hero is on
+screen, WebGL exists, and motion is allowed). When adding anything heavy,
+lazy-load it and re-run `node check.mjs` plus a Lighthouse mobile pass before
+shipping.

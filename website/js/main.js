@@ -1,125 +1,221 @@
-// Todoke — paper edition. Theme, smooth scroll, restrained reveals.
-// Motion rules per the design system: reveals enhance already-visible
-// content (no class-gated hiding), stagger ≤ 80 ms, reduced-motion = fades only.
+/* Todoke — zen edition choreography.
+   Stack: Lenis (smooth scroll), GSAP/ScrollTrigger (scrubs), anime.js
+   (counters), Three.js hero (lazy, via hero3d.js). Everything degrades:
+   missing lib → feature silently skipped; reduced motion / automation →
+   no smooth scroll, no hero, everything already visible. */
 
-// ---------------------------------------------------------------- theme
-const root = document.documentElement;
-const themeBtn = document.querySelector("[data-theme-toggle]");
+document.documentElement.classList.add("js");
 
-function applyTheme(theme) {
-  root.dataset.theme = theme;
-  try { localStorage.setItem("todoke-theme", theme); } catch (e) { /* private mode */ }
-}
+const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const FINE = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+/* Screenshot/test harnesses run under automation; ?motion=1 opts back in so
+   the real choreography stays probe-able. Everyone else gets the full ride. */
+const AUTOMATED = (navigator.webdriver || /HeadlessChrome/i.test(navigator.userAgent))
+  && !new URLSearchParams(location.search).has("motion");
+const pad2 = (n) => String(n).padStart(2, "0");
 
-themeBtn?.addEventListener("click", () => {
-  applyTheme(root.dataset.theme === "dark" ? "light" : "dark");
-});
+/* ---------------------------------------------------------------- nav */
+const head = document.querySelector(".site-head");
+const onScroll = () => head?.classList.toggle("is-scrolled", window.scrollY > 8);
+onScroll();
+window.addEventListener("scroll", onScroll, { passive: true });
 
-// ---------------------------------------------------------------- year
-const year = document.getElementById("year");
-if (year) year.textContent = String(new Date().getFullYear());
+document.getElementById("year")?.replaceChildren(document.createTextNode(String(new Date().getFullYear())));
 
-// ---------------------------------------------------------------- reduced motion
-const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
-
-// ---------------------------------------------------------------- lenis smooth scroll
-let lenis = null;
-async function initLenis() {
-  const automation = navigator.webdriver || new URLSearchParams(location.search).has("shot");
-  if (reduceMotion.matches || automation) return;
-  try {
-    const { default: Lenis } = await import("../vendor/lenis/lenis.mjs");
-    lenis = new Lenis({ duration: 1.05, easing: (t) => 1 - Math.pow(1 - t, 3.2) });
-    // The snap tool destroys lenis for deterministic screenshots; the raf
-    // loop must actually stop, or it keeps pinning scroll to lenis's position.
-    let rafRunning = true;
-    window.__todokeLenisDestroy = () => { rafRunning = false; lenis.destroy(); };
-    const raf = (time) => {
-      if (!rafRunning) return;
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    };
-    requestAnimationFrame(raf);
-  } catch (e) {
-    // smooth scroll is enhancement, never a requirement
-  }
-}
-initLenis();
-reduceMotion.addEventListener("change", () => {
-  if (reduceMotion.matches && lenis) { lenis.destroy(); lenis = null; }
-});
-
-// ---------------------------------------------------------------- reveals
-// Content is visible by default; JS only adds the entrance when it can run.
-const revealables = document.querySelectorAll(
-  ".block, .stat, .proof, .hero__shot, .section__head, .term, .dl"
-);
-
-if (!reduceMotion.matches && "IntersectionObserver" in window) {
-  const groups = new Map(); // parent -> index for 60ms stagger
-  revealables.forEach((el) => {
-    const key = el.parentElement;
-    const i = groups.get(key) ?? 0;
-    groups.set(key, i + 1);
-    el.classList.add("reveal");
-    el.style.setProperty("--reveal-delay", `${Math.min(i * 60, 240)}ms`);
-  });
-
-  const io = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-in");
-          io.unobserve(entry.target);
-        }
+/* ---------------------------------------------------------------- reveals */
+const revealEls = [...document.querySelectorAll("[data-reveal]")];
+if ("IntersectionObserver" in window && revealEls.length) {
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        e.target.classList.add("is-in");
+        io.unobserve(e.target);
       }
-    },
-    { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
-  );
-  revealables.forEach((el) => io.observe(el));
-}
-
-// ---------------------------------------------------------------- measured counters
-// Count the stat numbers up when the section enters. Reduced motion: skip.
-const stats = document.querySelectorAll(".stat__num[data-count]");
-
-function renderCount(el, value, suffix) {
-  el.textContent = value.toLocaleString("en-US") + suffix;
-}
-
-function animateCount(el) {
-  const target = Number(el.dataset.count);
-  const suffix = el.dataset.suffix ?? "";
-  if (reduceMotion.matches || target === 0) {
-    renderCount(el, target, suffix);
-    return;
-  }
-  const t0 = performance.now();
-  const dur = 1100;
-  const tick = (now) => {
-    const p = Math.min((now - t0) / dur, 1);
-    const eased = 1 - Math.pow(1 - p, 4);
-    renderCount(el, Math.round(target * eased), suffix);
-    if (p < 1) requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-}
-
-if (stats.length && "IntersectionObserver" in window) {
-  const seen = new WeakSet();
-  const counter = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting && !seen.has(entry.target)) {
-          seen.add(entry.target);
-          animateCount(entry.target);
-          counter.unobserve(entry.target);
-        }
-      }
-    },
-    { threshold: 0.5 }
-  );
-  stats.forEach((el) => counter.observe(el));
+    }
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+  revealEls.forEach((el) => io.observe(el));
 } else {
-  stats.forEach((el) => renderCount(el, Number(el.dataset.count), el.dataset.suffix ?? ""));
+  revealEls.forEach((el) => el.classList.add("is-in"));
+}
+
+/* ------------------------------------------------- feature ⇄ view swap */
+const featItems = [...document.querySelectorAll(".featitem")];
+const featViews = [...document.querySelectorAll(".featview__stack img")];
+const featIdx = document.querySelector(".featview__idx");
+function setFeature(i) {
+  featItems.forEach((el, j) => el.classList.toggle("is-active", i === j));
+  featViews.forEach((el, j) => el.classList.toggle("is-active", i === j));
+  if (featIdx) featIdx.textContent = pad2(i + 1);
+}
+if (featItems.length && featViews.length && "IntersectionObserver" in window) {
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) setFeature(Number(e.target.dataset.feat));
+    }
+  }, { rootMargin: "-42% 0px -42% 0px" });
+  featItems.forEach((el) => io.observe(el));
+}
+
+/* --------------------------------------------------- how step ⇄ number */
+const howSteps = [...document.querySelectorAll(".howstep")];
+const howNum = document.querySelector(".howview__num");
+function setStep(i) {
+  if (!howNum) return;
+  howNum.style.setProperty("--how-i", String(i));
+  howNum.querySelectorAll(".howview__fig").forEach((el, j) => el.classList.toggle("is-active", i === j));
+}
+if (howSteps.length && howNum && "IntersectionObserver" in window) {
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) setStep(Number(e.target.dataset.step));
+    }
+  }, { rootMargin: "-42% 0px -42% 0px" });
+  howSteps.forEach((el) => io.observe(el));
+}
+
+/* ---------------------------------------------------------- counters */
+const counters = [...document.querySelectorAll(".stat__num")];
+function runCounter(el) {
+  const finish = () => {
+    el.textContent = Number(el.dataset.count).toLocaleString("en-US") + (el.dataset.suffix || "");
+  };
+  if (!window.anime || REDUCED) { finish(); return; } // no engine / no motion: land on the number
+  const target = Number(el.dataset.count) || 0;
+  const suffix = el.dataset.suffix || "";
+  const state = { v: 0 };
+  window.anime({
+    targets: state,
+    v: target,
+    round: 1,
+    duration: 1500,
+    easing: "easeOutExpo",
+    update: () => { el.textContent = state.v.toLocaleString("en-US") + suffix; },
+  });
+}
+const libsReady = initLibs(); // resolves once gsap/anime are in (or have failed)
+if (counters.length && "IntersectionObserver" in window) {
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) {
+        libsReady.then(() => runCounter(e.target));
+        io.unobserve(e.target);
+      }
+    }
+  }, { threshold: 0.5 });
+  counters.forEach((el) => io.observe(el));
+}
+
+/* UMD vendor files run (and set their globals) when dynamically imported;
+   loading them here keeps 130 KB of animation libs off the critical path. */
+async function initLibs() {
+  if (REDUCED || AUTOMATED) return;
+  try {
+    await Promise.all([
+      import("../vendor/gsap/gsap.min.js"),
+      import("../vendor/gsap/ScrollTrigger.min.js"),
+      import("../vendor/gsap/CustomEase.min.js"),
+      import("../vendor/anime/anime.min.js"),
+    ]);
+  } catch (e) {
+    console.warn("animation libs unavailable, static fallbacks stay", e);
+  }
+}
+
+/* -------------------------------------------------- GSAP scrubs + lenis */
+async function initMotion() {
+  await libsReady; // gsap/anime are in (or failed) — branches below are final
+  if (!REDUCED && !AUTOMATED) {
+    try {
+      const { default: Lenis } = await import("../vendor/lenis/lenis.mjs");
+      const lenis = new Lenis({ lerp: 0.1 });
+      let rafRunning = true;
+      const raf = (t) => {
+        if (!rafRunning || !lenis) return;
+        lenis.raf(t);
+        requestAnimationFrame(raf);
+      };
+      requestAnimationFrame(raf);
+      // snap tool / test harness contract: stop the raf loop so scrollY stays put
+      window.__todokeLenisDestroy = () => { rafRunning = false; try { lenis.destroy(); } catch { /* already gone */ } };
+      if (window.gsap && window.ScrollTrigger) {
+        lenis.on("scroll", window.ScrollTrigger.update);
+      }
+      window.__todokeLenis = lenis;
+    } catch (e) {
+      console.warn("lenis unavailable, native scroll stays", e);
+    }
+  }
+
+  if (window.gsap && window.ScrollTrigger && !REDUCED && !AUTOMATED) {
+    try {
+      window.gsap.registerPlugin(window.ScrollTrigger, window.CustomEase);
+
+      /* wire-speed bar fills as it scrolls into view */
+      const wireFill = document.getElementById("wire-fill");
+      const wireMbps = document.getElementById("wire-mbps");
+      if (wireFill) {
+        const readout = { v: 0 };
+        window.gsap.to(readout, {
+          v: 108, ease: "none",
+          onUpdate: () => { if (wireMbps) wireMbps.textContent = String(Math.round(readout.v)); },
+          scrollTrigger: { trigger: ".wire", start: "top 85%", end: "top 35%", scrub: 0.5 },
+        });
+        window.gsap.fromTo(wireFill, { width: "0%" }, {
+          width: "96.4%", ease: "none",
+          scrollTrigger: { trigger: ".wire", start: "top 85%", end: "top 35%", scrub: 0.5 },
+        });
+      }
+
+      /* footer rings drift as the page settles into them */
+      const rings = document.getElementById("foot-rings");
+      if (rings) {
+        window.gsap.to(rings, {
+          rotate: 34, ease: "none", transformOrigin: "100% 100%",
+          scrollTrigger: { trigger: ".site-foot", start: "top bottom", end: "bottom bottom", scrub: 0.8 },
+        });
+      }
+    } catch (e) {
+      console.warn("scrolltrigger scrubs unavailable", e);
+    }
+  } else {
+    // no scrub engine: settle the wire readout so the section isn't blank
+    const wireMbps = document.getElementById("wire-mbps");
+    const wireFill = document.getElementById("wire-fill");
+    if (wireMbps) wireMbps.textContent = "108";
+    if (wireFill) wireFill.style.width = "96.4%";
+  }
+
+  /* hero: lazy three.js — never under reduced motion or automation */
+  if (!REDUCED && !AUTOMATED) {
+    import("./hero3d.js").catch(() => { /* CSS fallback remains */ });
+  }
+}
+initMotion();
+
+/* ------------------------------------------------------- smooth anchors */
+document.querySelectorAll('a[href^="#"]').forEach((a) => {
+  a.addEventListener("click", (e) => {
+    const id = a.getAttribute("href").slice(1);
+    if (!id) return;
+    const target = document.getElementById(id);
+    if (!target) return;
+    e.preventDefault();
+    const lenis = window.__todokeLenis;
+    if (lenis) lenis.scrollTo(target, { offset: -76 });
+    else target.scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+    history.pushState(null, "", "#" + id);
+  });
+});
+
+/* ----------------------------------------------------- magnetic buttons */
+if (FINE && !REDUCED && !AUTOMATED) {
+  document.querySelectorAll("[data-magnet]").forEach((btn) => {
+    btn.addEventListener("pointermove", (e) => {
+      const r = btn.getBoundingClientRect();
+      const dx = (e.clientX - r.left - r.width / 2) / (r.width / 2);
+      const dy = (e.clientY - r.top - r.height / 2) / (r.height / 2);
+      btn.style.transform = `translate(${(dx * 6).toFixed(1)}px, ${(dy * 5).toFixed(1)}px)`;
+    });
+    btn.addEventListener("pointerleave", () => { btn.style.transform = ""; });
+  });
 }
