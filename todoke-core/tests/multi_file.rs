@@ -357,6 +357,19 @@ async fn cancelled_session_keeps_completed_files() {
             .unwrap();
     }
     data_tx.finish().unwrap();
+    // Data and control ride separate streams with no cross-stream ordering:
+    // on a fast scheduler the Cancel can outrun the last chunk's verification.
+    // Wait until all of A is staged (verified bytes hit disk) before
+    // cancelling — "completed file A survives" is then the honest assertion.
+    let a_bytes: u64 = manifest.files[0].chunks.iter().map(|c| c.length).sum();
+    let staged_deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+    while transfer::staged_bytes(staging.path(), &manifest.hash) < a_bytes {
+        assert!(
+            tokio::time::Instant::now() < staged_deadline,
+            "file A never fully staged before the deadline"
+        );
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
     write_message(
         &mut ctl_tx,
         &Envelope::new(Message::Cancel {

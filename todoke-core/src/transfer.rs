@@ -44,7 +44,7 @@ use crate::{
 const STAGING_KEY_LEN: usize = 16;
 
 /// Maximum Missing/re-request rounds before giving up on a session.
-const MAX_MISSING_ROUNDS: u32 = 3;
+pub const MAX_MISSING_ROUNDS: u32 = 3;
 
 /// Maximum staging directories kept per receiver (evicted oldest-first at
 /// session start, so aborted manifests can't grow staging unbounded).

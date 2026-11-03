@@ -490,13 +490,31 @@ fn serve(
             });
 
         if json {
-            // A wildcard bind is not dialable — report the loopback form so
-            // consumers of this line can connect directly.
+            // A wildcard bind is not dialable by itself. Report the address a
+            // remote peer should dial: --advertise-ip when it's an IP, else
+            // the IP a UDP dial would source from (best non-loopback local
+            // address); loopback stays the last resort for same-machine use.
+            let explicit: Option<std::net::IpAddr> = if advertise_ip != "0.0.0.0" {
+                advertise_ip.parse().ok()
+            } else {
+                None
+            };
+            let dialable_ip: std::net::IpAddr = match explicit {
+                Some(ip) => ip,
+                None => {
+                    let probe = async {
+                        let s = tokio::net::UdpSocket::bind("0.0.0.0:0").await.ok()?;
+                        s.connect("8.8.8.8:80").await.ok()?;
+                        s.local_addr().ok().map(|a| a.ip())
+                    };
+                    probe
+                        .await
+                        .filter(|ip| !ip.is_loopback())
+                        .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST))
+                }
+            };
             let dialable = if addr.ip().is_unspecified() {
-                std::net::SocketAddr::new(
-                    std::net::IpAddr::V4(std::net::Ipv4Addr::LOCALHOST),
-                    addr.port(),
-                )
+                std::net::SocketAddr::new(dialable_ip, addr.port())
             } else {
                 addr
             };

@@ -310,35 +310,50 @@ async fn corrupt_chunk_is_rerequested_and_transfer_completes() {
         other => panic!("expected Missing, got {other:?}"),
     }
 
-    // Round 2: resend the missing chunk correctly, complete again.
-    {
-        let (mut data_tx, _data_rx) = conn.open_bi().await.unwrap();
-        let chunk = &manifest.files[0].chunks[tamper_index];
-        let mut buf = vec![0u8; chunk.length as usize];
-        let mut f = fs::File::open(&file).unwrap();
-        use std::io::{Read, Seek, SeekFrom};
-        f.seek(SeekFrom::Start(chunk.offset)).unwrap();
-        f.read_exact(&mut buf).unwrap();
-        write_data_frame(&mut data_tx, 0, tamper_index as u32, &buf)
+    // Round 2+: resend the missing chunk correctly and Complete again. Data
+    // and control ride separate streams with no cross-stream ordering, so the
+    // receiver's Complete can land before the corrected chunk is staged — it
+    // answers Missing again and a compliant sender simply resends (exactly
+    // the rounds the CLI sender runs). Bounded by the engine's round limit.
+    let mut accepted = None;
+    for _round in 0..=transfer::MAX_MISSING_ROUNDS {
+        {
+            let (mut data_tx, _data_rx) = conn.open_bi().await.unwrap();
+            let chunk = &manifest.files[0].chunks[tamper_index];
+            let mut buf = vec![0u8; chunk.length as usize];
+            let mut f = fs::File::open(&file).unwrap();
+            use std::io::{Read, Seek, SeekFrom};
+            f.seek(SeekFrom::Start(chunk.offset)).unwrap();
+            f.read_exact(&mut buf).unwrap();
+            write_data_frame(&mut data_tx, 0, tamper_index as u32, &buf)
+                .await
+                .unwrap();
+            data_tx.finish().unwrap();
+            write_message(
+                &mut ctl_tx,
+                &Envelope::new(Message::Complete {
+                    manifest_hash: manifest.hash.clone(),
+                }),
+            )
             .await
             .unwrap();
-        data_tx.finish().unwrap();
-        write_message(
-            &mut ctl_tx,
-            &Envelope::new(Message::Complete {
-                manifest_hash: manifest.hash.clone(),
-            }),
-        )
-        .await
-        .unwrap();
-    }
-    match read_message(&mut ctl_rx).await.unwrap().message {
-        Message::Receipt { receipt } => {
-            assert!(receipt.verify_against(&manifest));
-            assert_eq!(receipt.files[0].hash, manifest.files[0].hash);
         }
-        other => panic!("expected Receipt after re-request, got {other:?}"),
+        match read_message(&mut ctl_rx).await.unwrap().message {
+            Message::Receipt { receipt } => {
+                accepted = Some(receipt);
+                break;
+            }
+            Message::Missing { chunks, .. } => {
+                assert_eq!(chunks.len(), 1);
+                assert_eq!(chunks[0].chunk as usize, tamper_index);
+                continue; // Complete raced the corrected chunk; resend
+            }
+            other => panic!("expected Receipt or Missing, got {other:?}"),
+        }
     }
+    let receipt = accepted.expect("receiver never accepted the corrected chunk");
+    assert!(receipt.verify_against(&manifest));
+    assert_eq!(receipt.files[0].hash, manifest.files[0].hash);
 
     let got = target.path().join("payload.dat");
     assert_eq!(
