@@ -46,3 +46,24 @@ Log of decisions made during research and planning (2026-10). Sources and full c
 5. Pairing/QR + mesh (Iroh)
 6. No-install web receiver + portable exe
 7. Later: cable mode, multipath bonding, mobile
+
+## 2026-11-04 — Cross-OS verification via Linux containers
+
+Docker (Desktop 29.9.2 + WSL2) now part of the verification loop:
+
+- **Debian (rust:1, glibc)**: full suite 72/72 after fixing two Linux-only
+  flaky races in tests (cancel/complete vs data-stream ordering — both were
+  over-assuming cross-stream ordering that QUIC never promises). Windows
+  re-verified 72/72 with the same fixes.
+- **Container↔container e2e**: serve + send across a Docker bridge network
+  (separate network stacks, real UDP/QUIC — not loopback): 50 MiB + 1 MiB,
+  byte-identical, receipt verified. Closest thing to the two-device test
+  before real hardware.
+- **Alpine (musl)**: builds clean, big-file bench 105.8 MB/s in-container.
+- **Real bug found & fixed**: `serve --json` always reported 127.0.0.1 as the
+  dialable address — useless for any remote consumer of the line. Now
+  prefers --advertise-ip, else the routing-table source IP, loopback last.
+
+macOS cannot be containerized (no macOS images exist; Apple licensing). macOS
+verification plan: GitHub Actions `macos-latest` runner once the repo is
+public — build + test suite there, plus GUI build check.
