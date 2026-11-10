@@ -207,6 +207,37 @@ document.querySelectorAll('a[href^="#"]').forEach((a) => {
   });
 });
 
+/* ------------------------------------------------------- scrollspy nav */
+const spySections = ["features", "how", "measured", "questions"]
+  .map((id) => ({ id, el: document.getElementById(id) }))
+  .filter((s) => s.el);
+const spyLinks = new Map(
+  spySections.map((s) => {
+    const link = document.querySelector(`.site-nav__link[href="#${s.id}"]`);
+    return link ? [s.id, link] : [s.id, null];
+  })
+);
+if ("IntersectionObserver" in window && spySections.length) {
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        const link = spyLinks.get(e.target.id);
+        if (link) link.classList.toggle("is-active", e.isIntersecting);
+      }
+    },
+    { rootMargin: "-45% 0px -45% 0px" }
+  );
+  spySections.forEach((s) => io.observe(s.el));
+}
+
+/* ---------------------------------------------- FAQ: one open at a time */
+const faqItems = [...document.querySelectorAll(".faq__item")];
+faqItems.forEach((item) => {
+  item.addEventListener("toggle", () => {
+    if (item.open) faqItems.forEach((other) => { if (other !== item) other.open = false; });
+  });
+});
+
 /* ----------------------------------------------------- magnetic buttons */
 if (FINE && !REDUCED && !AUTOMATED) {
   document.querySelectorAll("[data-magnet]").forEach((btn) => {
