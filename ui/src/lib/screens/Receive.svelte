@@ -2,6 +2,7 @@
   import { open } from "@tauri-apps/plugin-dialog";
   import { receiveStart, receiveStop, setReceiveTarget } from "../api";
   import { app } from "../state.svelte";
+  import { icons } from "../icons";
   import { formatBytes, timeAgo } from "../format";
 
   let busy = $state(false);
@@ -45,18 +46,18 @@
   }
 </script>
 
-<header class="head">
+<header class="page-head">
   <div>
     <h1>Receive</h1>
-    <p class="sub">
+    <p class="page-sub">
       When receive is on, other devices can send files to this one — it runs
       in the background of every screen.
     </p>
   </div>
 </header>
 
-<section class="panel">
-  <div class="switch-row">
+<section class="card panel">
+  <div class="row switch-row">
     <div class="switch-copy">
       <span class="switch-title">
         {app.receive.on ? "Receiving" : "Receive is off"}
@@ -86,14 +87,17 @@
     </button>
   </div>
 
-  <div class="target-row">
-    <span class="target-label">Target folder</span>
-    <span class="target-path" title={app.receive.target ?? ""}>
+  <div class="row target-row">
+    <span class="target-label">
+      <span class="ico ico-16">{@html icons.folder}</span>
+      Target folder
+    </span>
+    <span class="target-path mono" title={app.receive.target ?? ""}>
       {app.receive.target ?? app.identity?.defaultTarget ?? "—"}
     </span>
     <button
       type="button"
-      class="ghost"
+      class="btn btn-ghost"
       onclick={() => void changeTarget()}
       disabled={busy || app.receive.on}
       title={app.receive.on ? "Stop receive mode before changing the target folder" : undefined}
@@ -103,7 +107,7 @@
   </div>
 
   {#if error}
-    <p class="error" role="alert">{error}</p>
+    <p class="form-error" role="alert">{error}</p>
   {/if}
 </section>
 
@@ -111,286 +115,258 @@
   <div class="log-head">
     <h2>Incoming transfers</h2>
     {#if app.incoming.length > 0}
-      <span class="count">{app.incoming.length}</span>
+      <span class="pill">{app.incoming.length}</span>
     {/if}
   </div>
 
   {#if app.incoming.length === 0}
-    <p class="empty-line">Nothing has arrived yet.</p>
+    <div class="empty-state">
+      <span class="ico ico-40">{@html icons.inbox}</span>
+      <p class="empty-line">Nothing has arrived yet.</p>
+    </div>
   {:else}
-    <ul class="entries" role="list">
-      {#each app.incoming as r (r.atUnixMs + r.manifestHash)}
-        <li class:bad={!r.ok}>
-          <button
-            type="button"
-            class="entry"
-            aria-expanded={expanded === r.manifestHash + r.atUnixMs}
-            onclick={() => toggleExpand(r.manifestHash + r.atUnixMs)}
-          >
-            <span class="mark" class:ok={r.ok} aria-hidden="true">{r.ok ? "✓" : "!"}</span>
-            <span class="who">{r.fromAddr}</span>
-            <span class="what">
-              {r.ok
-                ? `${r.files.length} file${r.files.length === 1 ? "" : "s"} · ${formatBytes(r.totalBytes)}`
-                : "failed"}
-            </span>
-            <span class="when">{timeAgo(r.atUnixMs)}</span>
-          </button>
-          {#if expanded === r.manifestHash + r.atUnixMs}
-            <div class="detail">
-              {#if r.ok}
-                <ul role="list">
-                  {#each r.files as f (f.path)}
-                    <li>
-                      <span class="d-path">{f.path}</span>
-                      <span class="d-meta">{formatBytes(f.size)} · <span class="mono">{f.hash.slice(0, 12)}…</span></span>
-                    </li>
-                  {/each}
-                </ul>
-              {:else}
-                <p class="d-err">{r.error}</p>
-              {/if}
-            </div>
-          {/if}
-        </li>
-      {/each}
-    </ul>
+    <div class="card">
+      <ul class="entries" role="list">
+        {#each app.incoming as r (r.atUnixMs + r.manifestHash)}
+          <li class:bad={!r.ok}>
+            <button
+              type="button"
+              class="entry"
+              aria-expanded={expanded === r.manifestHash + r.atUnixMs}
+              onclick={() => toggleExpand(r.manifestHash + r.atUnixMs)}
+            >
+              <span class="mark" class:ok={r.ok} aria-hidden="true">
+                <span class="ico ico-16">{@html r.ok ? icons.check : icons.alert}</span>
+              </span>
+              <span class="who">{r.fromAddr}</span>
+              <span class="what">
+                {r.ok
+                  ? `${r.files.length} file${r.files.length === 1 ? "" : "s"} · ${formatBytes(r.totalBytes)}`
+                  : "failed"}
+              </span>
+              <span class="when">{timeAgo(r.atUnixMs)}</span>
+            </button>
+            {#if expanded === r.manifestHash + r.atUnixMs}
+              <div class="detail">
+                {#if r.ok}
+                  <ul role="list">
+                    {#each r.files as f (f.path)}
+                      <li>
+                        <span class="d-path">{f.path}</span>
+                        <span class="d-meta">{formatBytes(f.size)} · <span class="mono d-hash">{f.hash.slice(0, 12)}…</span></span>
+                      </li>
+                    {/each}
+                  </ul>
+                {:else}
+                  <p class="d-err">{r.error}</p>
+                {/if}
+              </div>
+            {/if}
+          </li>
+        {/each}
+      </ul>
+    </div>
   {/if}
 </section>
 
 <style>
-  .head {
-    margin-bottom: var(--s5);
-  }
-
-  h1 {
-    font-size: var(--fs-h1);
-  }
-
-  h2 {
-    font-size: var(--fs-h3);
-  }
-
-  .sub {
-    color: var(--text-dim);
-    font-size: var(--fs-sm);
-    margin-top: var(--s1);
-    max-width: 44rem;
-  }
-
   .panel {
-    border: 1px dashed var(--line);
-    border-radius: var(--r-tile);
-    padding: var(--s5);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s4);
     max-width: 46rem;
+    padding: 4px 16px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
   }
 
   .switch-row {
-    display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: var(--s4);
+  }
+
+  .target-row {
+    border-top: 1px solid var(--sep);
   }
 
   .switch-copy {
     display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
   }
 
   .switch-title {
-    color: var(--text-hi);
-    font-weight: 640;
+    color: var(--text);
+    font-weight: 600;
     display: flex;
     align-items: center;
-    gap: var(--s2);
+    gap: 8px;
   }
 
+  /* Listening dot: 8px green core, ring grows 8px -> 10px while fading, 2s ease */
   .live {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--volt);
-    animation: breathe 2.4s ease-in-out infinite;
+    background: var(--ok);
+    position: relative;
   }
 
-  @keyframes breathe {
-    0%,
-    100% {
-      opacity: 1;
+  .live::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--ok);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    from {
+      transform: scale(1);
+      opacity: 0.45;
     }
-    50% {
-      opacity: 0.35;
+    to {
+      transform: scale(1.25);
+      opacity: 0;
     }
   }
 
   .switch-sub {
-    color: var(--text-dim);
+    color: var(--text-2);
     font-size: var(--fs-sm);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
+  /* Apple toggle */
   .switch {
-    width: 52px;
-    height: 28px;
+    width: 40px;
+    height: 24px;
     flex: none;
     border-radius: var(--r-pill);
-    background: var(--ink-2);
-    border: 1px solid var(--line);
+    background: var(--fill);
+    box-shadow: inset 0 0 0 1px var(--hairline);
     position: relative;
     transition:
       background var(--dur-2) var(--ease-out),
-      border-color var(--dur-2) var(--ease-out);
+      box-shadow var(--dur-2) var(--ease-out),
+      transform var(--dur-1) var(--ease-out);
   }
 
   .switch .knob {
     position: absolute;
-    top: 3px;
-    left: 3px;
+    top: 2px;
+    left: 2px;
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: var(--text-dim);
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     transition:
       transform var(--dur-2) var(--ease-out),
       background var(--dur-2) var(--ease-out);
   }
 
   .switch.on {
-    background: color-mix(in oklab, var(--volt) 22%, var(--ink-2));
-    border-color: var(--volt);
+    background: var(--accent);
+    box-shadow: none;
   }
 
   .switch.on .knob {
-    transform: translateX(24px);
-    background: var(--volt);
+    transform: translateX(16px);
+    background: var(--on-accent);
   }
 
   .switch:disabled {
     opacity: 0.55;
-    cursor: default;
-  }
-
-  .target-row {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    align-items: baseline;
-    gap: var(--s3);
-    border-top: 1px dashed var(--line);
-    padding-top: var(--s4);
   }
 
   .target-label {
-    color: var(--text-dim);
-    font-size: var(--fs-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-2);
+    font-size: var(--fs-body);
+    flex: none;
   }
 
   .target-path {
-    color: var(--text);
+    flex: 1;
+    min-width: 0;
     font-size: var(--fs-sm);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    user-select: text;
-  }
-
-  .ghost {
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: var(--r-pill);
-    padding: var(--s1) var(--s3);
-    font-size: var(--fs-sm);
-    transition:
-      border-color var(--dur-1) var(--ease-out),
-      color var(--dur-1) var(--ease-out);
-  }
-
-  .ghost:hover:not(:disabled) {
-    color: var(--volt);
-    border-color: var(--volt);
-  }
-
-  .ghost:disabled {
-    opacity: 0.45;
-    cursor: default;
-  }
-
-  .error {
-    color: var(--err);
-    font-size: var(--fs-sm);
-    user-select: text;
+    text-align: right;
   }
 
   .log {
-    margin-top: var(--s6);
+    margin-top: 28px;
+    max-width: 46rem;
   }
 
   .log-head {
     display: flex;
-    align-items: baseline;
-    gap: var(--s3);
-    margin-bottom: var(--s3);
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
   }
 
-  .count {
-    color: var(--volt);
-    font-size: var(--fs-sm);
-    font-variant-numeric: tabular-nums;
+  .log-head h2 {
+    font-size: var(--fs-section);
   }
 
   .empty-line {
-    color: var(--text-dim);
+    color: var(--text-2);
   }
 
   .entries {
     list-style: none;
     margin: 0;
-    padding: 0;
-  }
-
-  .entries li {
-    border-top: 1px dashed var(--line);
+    padding: 0 16px;
   }
 
   .entry {
     width: 100%;
     display: grid;
     grid-template-columns: auto minmax(8rem, 1fr) minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: var(--s3);
-    padding: var(--s3) var(--s1);
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    padding: 8px 0;
     text-align: left;
+    transition: background var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
   }
 
   .entry:hover {
-    background: var(--ink-1);
+    background: var(--fill);
+    border-radius: var(--r-btn);
   }
 
   .mark {
-    width: 1.4rem;
-    height: 1.4rem;
+    width: 22px;
+    height: 22px;
     display: grid;
     place-items: center;
     border-radius: 50%;
-    font-size: 0.8rem;
-    align-self: center;
-  }
-
-  .mark.ok {
-    color: var(--volt-ink);
-    background: var(--volt);
+    color: var(--ok);
+    background: color-mix(in oklab, var(--ok) 14%, transparent);
   }
 
   li.bad .mark {
     color: var(--err);
-    background: color-mix(in oklab, var(--err) 15%, transparent);
+    background: color-mix(in oklab, var(--err) 14%, transparent);
   }
 
   .who {
-    color: var(--text-hi);
-    font-weight: 600;
+    color: var(--text);
+    font-weight: 500;
+    font-family: var(--mono);
+    font-size: var(--fs-sm);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -398,33 +374,34 @@
   }
 
   .what {
-    color: var(--text-dim);
+    color: var(--text-2);
     font-size: var(--fs-sm);
   }
 
   .when {
-    color: var(--text-dim);
+    color: var(--text-3);
     font-size: var(--fs-xs);
   }
 
   .detail {
-    padding: 0 var(--s1) var(--s4) calc(1.4rem + var(--s3) + var(--s1));
+    padding: 0 0 12px calc(22px + 12px);
+    border-top: 1px solid var(--sep);
+    margin-top: -4px;
   }
 
   .detail ul {
     list-style: none;
-    margin: 0;
+    margin: 10px 0 0;
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--s1);
+    gap: 6px;
   }
 
   .detail li {
     display: flex;
     justify-content: space-between;
-    gap: var(--s4);
-    border: none;
+    gap: 16px;
   }
 
   .d-path {
@@ -433,22 +410,22 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    user-select: text;
   }
 
   .d-meta {
-    color: var(--text-dim);
-    font-size: var(--fs-xs);
+    color: var(--text-2);
+    font-size: 11.5px;
+    font-family: var(--mono);
     flex: none;
     font-variant-numeric: tabular-nums;
+    user-select: text;
   }
 
   .d-err {
     color: var(--err);
     font-size: var(--fs-sm);
+    padding-top: 10px;
     user-select: text;
-  }
-
-  .mono {
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
   }
 </style>
