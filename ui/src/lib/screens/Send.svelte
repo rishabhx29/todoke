@@ -11,6 +11,7 @@
     type SendEvent,
   } from "../api";
   import { app, go } from "../state.svelte";
+  import { icons } from "../icons";
   import { copyText } from "../clipboard";
   import { etaString, formatBytes, formatSpeed, shortFp } from "../format";
 
@@ -263,15 +264,15 @@
 </script>
 
 {#snippet pageHead(title: string, sub: string)}
-  <header class="head">
+  <header class="page-head">
     <div>
       <h1>{title}</h1>
-      <p class="sub">{sub}</p>
+      <p class="page-sub">{sub}</p>
     </div>
     {#if phase === "sending"}
-      <button type="button" class="danger" onclick={() => void cancelSend()}>Cancel transfer</button>
+      <button type="button" class="btn btn-danger" onclick={() => void cancelSend()}>Cancel transfer</button>
     {:else if phase === "receipt" || phase === "failed"}
-      <button type="button" class="ghost" onclick={reset}>Send something else</button>
+      <button type="button" class="btn btn-ghost" onclick={reset}>Send something else</button>
     {/if}
   </header>
 {/snippet}
@@ -280,18 +281,14 @@
   {@render pageHead("Send", "Pick what moves and where it arrives.")}
 
   <div class="dropzone" class:over={dragOver} aria-label="Selected files and folders">
-    <div class="pick-actions">
-      <button type="button" class="cta" onclick={() => void addFiles()}>Add files…</button>
-      <button type="button" class="ghost" onclick={() => void addFolder()}>Add folder…</button>
-      {#if items.length > 0}
-        <button type="button" class="ghost" onclick={clearItems}>Clear</button>
-      {/if}
-      <span class="hint">or drop files anywhere in this window</span>
-    </div>
-
     {#if items.length === 0}
-      <p class="empty-line">Nothing selected yet.</p>
-    {:else}
+      <div class="pick-empty">
+        <span class="ico ico-40">{@html icons.upload}</span>
+        <p class="empty-line">Nothing selected yet.</p>
+      </div>
+    {/if}
+
+    {#if items.length > 0}
       <ul class="items" role="list">
         {#each items as p (p)}
           <li>
@@ -312,6 +309,15 @@
           : "ready"}
       </p>
     {/if}
+
+    <div class="pick-actions">
+      <button type="button" class="btn btn-primary" onclick={() => void addFiles()}>Add files…</button>
+      <button type="button" class="btn btn-ghost" onclick={() => void addFolder()}>Add folder…</button>
+      {#if items.length > 0}
+        <button type="button" class="btn btn-ghost" onclick={clearItems}>Clear</button>
+      {/if}
+      <span class="hint">or drop files anywhere in this window</span>
+    </div>
   </div>
 
   <section class="dest">
@@ -340,7 +346,7 @@
       </div>
       <button
         type="button"
-        class="cta send"
+        class="btn btn-primary btn-lg send"
         disabled={!selectedDevice || items.length === 0}
         onclick={() => void startSend()}
       >
@@ -354,7 +360,7 @@
     selectedDevice ? `to ${selectedDevice.name} (${shortFp(selectedDevice.fingerprint)})` : "to your device",
   )}
 
-  <div class="progress-card">
+  <div class="card progress-card">
     <div class="big-row">
       <span class="pct">{Math.round(fraction * 100)}%</span>
       <span class="meta">
@@ -369,14 +375,14 @@
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div class="fill" style={`width: ${fraction * 100}%`}></div>
+      <div class="fill" style={`transform: scaleX(${fraction})`}></div>
     </div>
 
     <ul class="inflight" role="list">
       {#each activeFiles as [path, f] (path)}
         <li>
           <span class="fname">{fileName(path)}</span>
-          <span class="fbar"><span class="ffill" style={`width: ${f.size > 0 ? (f.sent / f.size) * 100 : 0}%`}></span></span>
+          <span class="fbar"><span class="ffill" style={`transform: scaleX(${f.size > 0 ? f.sent / f.size : 0})`}></span></span>
           <span class="fmeta">{formatBytes(f.sent)} / {formatBytes(f.size)}</span>
         </li>
       {/each}
@@ -386,7 +392,7 @@
 {:else if phase === "receipt" && receipt}
   {@render pageHead("Arrived ✓", "Every byte verified end-to-end.")}
 
-  <div class="receipt">
+  <div class="card receipt">
     <p class="r-sub">
       {receipt.files.length} file{receipt.files.length === 1 ? "" : "s"} ·
       {formatBytes(receipt.files.reduce((a, f) => a + f.size, 0))} ·
@@ -429,105 +435,56 @@
 {/if}
 
 <style>
-  .head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--s4);
-    margin-bottom: var(--s5);
-  }
-
-  h1 {
-    font-size: var(--fs-h1);
-  }
-
   h2 {
-    font-size: var(--fs-h3);
-    margin-bottom: var(--s3);
-  }
-
-  .sub {
-    color: var(--text-dim);
-    font-size: var(--fs-sm);
-    margin-top: var(--s1);
-  }
-
-  .cta {
-    background: var(--volt);
-    color: var(--volt-ink);
-    font-weight: 640;
-    padding: var(--s2) var(--s4);
-    border-radius: var(--r-pill);
-    transition: transform var(--dur-1) var(--ease-out);
-  }
-
-  .cta:hover:not(:disabled) {
-    transform: translateY(-1px);
-  }
-
-  .cta:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-
-  .ghost {
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: var(--r-pill);
-    padding: var(--s2) var(--s4);
-    transition:
-      border-color var(--dur-1) var(--ease-out),
-      color var(--dur-1) var(--ease-out);
-  }
-
-  .ghost:hover {
-    color: var(--volt);
-    border-color: var(--volt);
-  }
-
-  .danger {
-    color: var(--err);
-    border: 1px solid var(--err);
-    border-radius: var(--r-pill);
-    padding: var(--s2) var(--s4);
-    transition: background var(--dur-1) var(--ease-out);
-  }
-
-  .danger:hover {
-    background: color-mix(in oklab, var(--err) 12%, transparent);
+    font-size: var(--fs-section);
+    margin-bottom: 10px;
   }
 
   .hint {
-    color: var(--text-dim);
-    font-size: var(--fs-xs);
+    color: var(--text-2);
+    font-size: var(--fs-sm);
   }
 
   .empty-line {
-    color: var(--text-dim);
-    padding: var(--s4) 0;
+    color: var(--text-2);
   }
 
+  /* Dropzone: dashed hairline card, accent on hover/drag */
   .dropzone {
-    border: 1px dashed var(--line);
-    border-radius: var(--r-tile);
-    padding: var(--s5);
-    transition: border-color var(--dur-1) var(--ease-out);
+    border: 1.5px dashed var(--hairline);
+    border-radius: var(--r-card);
+    background: var(--surface);
+    box-shadow: var(--shadow-card);
+    padding: 20px;
+    transition:
+      border-color var(--dur-1) var(--ease-out),
+      background var(--dur-1) var(--ease-out);
   }
 
   .dropzone.over {
-    border-color: var(--volt);
+    border-color: var(--accent);
+    background: color-mix(in oklab, var(--accent) 4%, var(--surface));
+  }
+
+  .pick-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0 4px;
   }
 
   .pick-actions {
     display: flex;
     align-items: center;
-    gap: var(--s3);
+    gap: 10px;
     flex-wrap: wrap;
+    margin-top: 16px;
   }
 
   .items {
     list-style: none;
-    margin: var(--s4) 0 0;
+    margin: 16px 0 0;
     padding: 0;
     max-height: 16rem;
     overflow-y: auto;
@@ -537,20 +494,24 @@
     display: grid;
     grid-template-columns: minmax(10rem, 1fr) minmax(0, 2fr) auto;
     align-items: baseline;
-    gap: var(--s3);
-    padding: var(--s2) 0;
-    border-top: 1px dashed var(--line);
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid var(--sep);
+  }
+
+  .items li:first-child {
+    border-top: none;
   }
 
   .fname {
-    color: var(--text-hi);
+    color: var(--text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .fdir {
-    color: var(--text-dim);
+    color: var(--text-3);
     font-size: var(--fs-xs);
     overflow: hidden;
     text-overflow: ellipsis;
@@ -560,116 +521,121 @@
   }
 
   .x {
-    color: var(--text-dim);
-    font-size: 1.1rem;
+    color: var(--text-3);
+    font-size: 15px;
     line-height: 1;
-    padding: 0 var(--s2);
-    border-radius: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    transition:
+      color var(--dur-1) var(--ease-out),
+      background var(--dur-1) var(--ease-out),
+      transform var(--dur-1) var(--ease-out);
   }
 
   .x:hover {
     color: var(--err);
+    background: color-mix(in oklab, var(--err) 10%, transparent);
   }
 
   .tally {
-    color: var(--text-dim);
+    color: var(--text-2);
     font-size: var(--fs-sm);
-    margin-top: var(--s3);
+    margin-top: 12px;
   }
 
   .dest {
-    margin-top: var(--s6);
+    margin-top: 28px;
   }
 
   .devlist {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s3);
+    gap: 10px;
   }
 
   .dev {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     align-items: flex-start;
-    border: 1px solid var(--line);
-    background: var(--ink-1);
-    border-radius: var(--r-tile);
-    padding: var(--s3) var(--s4);
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 10px 14px;
     transition:
       border-color var(--dur-1) var(--ease-out),
-      background var(--dur-1) var(--ease-out);
+      background var(--dur-1) var(--ease-out),
+      transform var(--dur-1) var(--ease-out);
   }
 
   .dev:hover {
-    border-color: var(--text-dim);
+    background: var(--fill);
   }
 
   .dev.picked {
-    border-color: var(--volt);
-    background: color-mix(in oklab, var(--volt) 7%, var(--ink-1));
+    border-color: var(--accent);
+    background: var(--accent-soft);
   }
 
   .dname {
-    color: var(--text-hi);
-    font-weight: 620;
+    color: var(--text);
+    font-weight: 600;
   }
 
   .dfp {
-    color: var(--text-dim);
+    color: var(--text-2);
     font-size: var(--fs-xs);
+    font-family: var(--mono);
     font-variant-numeric: tabular-nums;
   }
 
   .send {
-    margin-top: var(--s5);
+    margin-top: 20px;
   }
 
   .link {
-    color: var(--volt);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .link:hover {
     text-decoration: underline;
     text-underline-offset: 3px;
   }
 
+  /* Sending */
   .progress-card {
     max-width: 46rem;
     display: flex;
     flex-direction: column;
-    gap: var(--s4);
+    gap: 16px;
+    padding: 20px;
   }
 
   .big-row {
     display: flex;
     align-items: baseline;
-    gap: var(--s4);
+    gap: 14px;
+    flex-wrap: wrap;
   }
 
   .pct {
-    color: var(--text-hi);
-    font-size: 2.4rem;
-    font-weight: 720;
+    color: var(--text);
+    font-size: 38px;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
+    line-height: 1;
   }
 
   .meta {
-    color: var(--text-dim);
+    color: var(--text-2);
     font-size: var(--fs-sm);
+    font-family: var(--mono);
     font-variant-numeric: tabular-nums;
-  }
-
-  .bar {
-    height: 10px;
-    background: var(--ink-1);
-    border: 1px solid var(--line);
-    border-radius: var(--r-pill);
-    overflow: hidden;
-  }
-
-  .fill {
-    height: 100%;
-    background: var(--volt);
-    transition: width 200ms var(--ease-out);
   }
 
   .inflight {
@@ -678,20 +644,20 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: var(--s2);
+    gap: 8px;
   }
 
   .inflight li {
     display: grid;
     grid-template-columns: minmax(8rem, 1fr) 2fr minmax(6rem, auto);
-    gap: var(--s3);
+    gap: 12px;
     align-items: center;
     font-size: var(--fs-sm);
   }
 
   .fbar {
-    height: 5px;
-    background: var(--ink-1);
+    height: 4px;
+    background: var(--track);
     border-radius: var(--r-pill);
     overflow: hidden;
   }
@@ -699,26 +665,30 @@
   .ffill {
     display: block;
     height: 100%;
-    background: var(--glow);
-    transition: width 200ms var(--ease-out);
+    background: var(--accent);
+    transform-origin: 0 50%;
+    border-radius: inherit;
+    transition: transform var(--dur-2) var(--ease-out);
   }
 
   .fmeta {
-    color: var(--text-dim);
+    color: var(--text-2);
+    font-family: var(--mono);
+    font-size: var(--fs-xs);
     font-variant-numeric: tabular-nums;
     text-align: right;
   }
 
-  .receipt .r-sub {
-    color: var(--text-dim);
-    font-size: var(--fs-sm);
-    margin-bottom: var(--s4);
+  /* Receipt */
+  .receipt {
+    max-width: 46rem;
+    padding: 20px;
   }
 
-  .mono {
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: 0.95em;
-    user-select: text;
+  .receipt .r-sub {
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+    margin-bottom: 12px;
   }
 
   .r-files {
@@ -730,10 +700,10 @@
   .r-files li {
     display: grid;
     grid-template-columns: minmax(10rem, 2fr) minmax(5rem, auto) auto;
-    gap: var(--s3);
+    gap: 12px;
     align-items: baseline;
-    padding: var(--s3) 0;
-    border-top: 1px dashed var(--line);
+    padding: 10px 0;
+    border-top: 1px solid var(--sep);
     animation: rise var(--dur-2) var(--ease-out) both;
     animation-delay: calc(var(--i) * 40ms);
   }
@@ -750,49 +720,58 @@
   }
 
   .hash {
-    color: var(--text-dim);
-    font-size: var(--fs-xs);
-    border: 1px solid transparent;
-    border-radius: 4px;
-    padding: 2px var(--s2);
+    color: var(--text-2);
+    font-size: 11.5px;
+    border-radius: 6px;
+    padding: 3px 8px;
+    transition:
+      color var(--dur-1) var(--ease-out),
+      background var(--dur-1) var(--ease-out),
+      transform var(--dur-1) var(--ease-out);
   }
 
   .hash:hover {
-    color: var(--volt);
-    border-color: var(--line);
+    color: var(--accent);
+    background: var(--accent-soft);
   }
 
+  /* Failed */
   .failed {
     max-width: 46rem;
     display: flex;
     flex-direction: column;
-    gap: var(--s3);
-    border: 1px dashed var(--err);
-    border-radius: var(--r-tile);
-    padding: var(--s5);
+    gap: 10px;
+    background: color-mix(in oklab, var(--err) 6%, var(--surface));
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-card);
+    padding: 20px;
   }
 
   .f-msg {
-    color: var(--text-hi);
+    color: var(--text);
     user-select: text;
   }
 
   .f-note {
-    color: var(--text-dim);
+    color: var(--text-2);
     font-size: var(--fs-sm);
   }
 
+  /* Drag overlay */
   .overlay {
     position: fixed;
-    inset: 0;
+    inset: 12px;
     z-index: 10;
     display: grid;
     place-items: center;
-    background: color-mix(in oklab, var(--ink-0) 82%, transparent);
-    border: 3px dashed var(--volt);
-    color: var(--volt);
-    font-size: var(--fs-h2);
-    font-weight: 700;
+    background: color-mix(in oklab, var(--bg) 55%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border: 2px dashed var(--accent);
+    border-radius: var(--r-hero);
+    color: var(--accent);
+    font-size: var(--fs-section);
+    font-weight: 600;
     pointer-events: none;
   }
 </style>
