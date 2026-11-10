@@ -65,22 +65,6 @@
 
   /* Scrollbar */
   --scroll-thumb: rgba(0, 0, 0, 0.22);
-
-  /* Legacy aliases — screens not yet restyled read these; removed once
-     every consumer is on the new names. */
-  --ink-0: var(--bg);
-  --ink-1: var(--surface);
-  --ink-2: var(--fill);
-  --line: var(--sep);
-  --text-hi: var(--text);
-  --text-dim: var(--text-2);
-  --volt: var(--accent);
-  --volt-ink: var(--on-accent);
-  --glow: var(--ok);
-  --fs-h1: var(--fs-title);
-  --fs-h2: var(--fs-section);
-  --fs-h3: var(--fs-section);
-  --r-tile: var(--r-card);
 }
 
 @media (prefers-color-scheme: dark) {
