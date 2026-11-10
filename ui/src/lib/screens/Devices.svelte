@@ -1,6 +1,7 @@
 <script lang="ts">
   import { listDevices, type Device } from "../api";
   import { app, go } from "../state.svelte";
+  import { icons } from "../icons";
   import { shortFp } from "../format";
 
   let devices = $state<Device[]>([]);
@@ -42,44 +43,48 @@
   }
 </script>
 
-<header class="head">
+<header class="page-head">
   <div>
     <h1>Devices</h1>
-    <p class="sub">
+    <p class="page-sub">
       {#if scanningSince}
-        listening for Todoke devices on this network…
+        Listening for Todoke devices on this network…
       {:else}
         {devices.length} device{devices.length === 1 ? "" : "s"} found ·
         refreshes every few seconds
       {/if}
     </p>
   </div>
-  <button type="button" class="ghost" onclick={() => void scan()} disabled={scanning}>
+  <button type="button" class="btn btn-ghost" onclick={() => void scan()} disabled={scanning}>
     {scanning ? "Scanning…" : "Refresh"}
   </button>
 </header>
 
 {#if error}
-  <p class="error" role="alert">Discovery failed: {error}</p>
+  <p class="form-error" role="alert">Discovery failed: {error}</p>
 {/if}
 
 {#if devices.length > 0}
   <ul class="list" role="list">
     {#each devices as d, i (d.fingerprint)}
-      <li class="row" style={`--i: ${Math.min(i, 8)}`}>
-        <span class="pulse" aria-hidden="true"></span>
+      <li class="card row" style={`--i: ${Math.min(i, 8)}`}>
+        <span class="presence" aria-hidden="true"></span>
         <div class="who">
           <span class="name">{d.name}</span>
+          {#if d.fingerprint === app.identity?.fingerprint}
+            <span class="pill pill-accent">This device</span>
+          {/if}
           <span class="fp">{shortFp(d.fingerprint)} · {d.addr}:{d.port}</span>
         </div>
-        <button type="button" class="cta" onclick={() => sendTo(d)}>Send…</button>
+        <button type="button" class="btn btn-primary" onclick={() => sendTo(d)}>Send…</button>
       </li>
     {/each}
   </ul>
 {:else if !scanningSince}
-  <div class="empty">
+  <div class="empty-state">
+    <span class="ico ico-40">{@html icons.devicesSearch}</span>
     <h2>Nothing on the lane yet</h2>
-    <p>
+    <p class="lede">
       Todoke finds other devices on the same network automatically. To see
       something here:
     </p>
@@ -92,8 +97,8 @@
         Keep receive mode on there — it appears here within a few seconds.
       </li>
     </ol>
-    <button type="button" class="ghost" aria-expanded={showHelp} onclick={() => (showHelp = !showHelp)}>
-      {showHelp ? "Hide" : "Show"} same-machine & firewall notes
+    <button type="button" class="btn btn-ghost" aria-expanded={showHelp} onclick={() => (showHelp = !showHelp)}>
+      {showHelp ? "Hide" : "Show"} same-machine &amp; firewall notes
     </button>
     {#if showHelp}
       <div class="help">
@@ -116,43 +121,21 @@
 {/if}
 
 <style>
-  .head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: var(--s4);
-    margin-bottom: var(--s5);
-  }
-
-  h1 {
-    font-size: var(--fs-h1);
-  }
-
-  .sub {
-    color: var(--text-dim);
-    font-size: var(--fs-sm);
-    margin-top: var(--s1);
-  }
-
-  .error {
-    color: var(--err);
-    font-size: var(--fs-sm);
-    margin-bottom: var(--s4);
-  }
-
   .list {
     list-style: none;
     margin: 0;
     padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 46rem;
   }
 
   .row {
     display: flex;
     align-items: center;
-    gap: var(--s4);
-    padding: var(--s4) var(--s2);
-    border-top: 1.5rem solid transparent;
-    border-image: var(--lane-dash) 1;
+    gap: 14px;
+    padding: 14px 16px;
     animation: rise var(--dur-2) var(--ease-out) both;
     animation-delay: calc(var(--i) * 40ms);
   }
@@ -168,121 +151,113 @@
     }
   }
 
-  .pulse {
-    width: 9px;
-    height: 9px;
+  .presence {
+    width: 8px;
+    height: 8px;
     flex: none;
     border-radius: 50%;
-    background: var(--volt);
-    animation: breathe 2.4s ease-in-out infinite;
+    background: var(--ok);
+    position: relative;
   }
 
-  @keyframes breathe {
-    0%,
-    100% {
-      opacity: 1;
+  .presence::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: var(--ok);
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    from {
+      transform: scale(1);
+      opacity: 0.45;
     }
-    50% {
-      opacity: 0.35;
+    to {
+      transform: scale(1.6);
+      opacity: 0;
     }
   }
 
   .who {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 3px;
     min-width: 0;
     flex: 1;
   }
 
   .name {
-    color: var(--text-hi);
-    font-weight: 620;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .fp {
-    color: var(--text-dim);
+    color: var(--text-2);
     font-size: var(--fs-xs);
+    font-family: var(--mono);
     font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  .cta {
-    background: var(--volt);
-    color: var(--volt-ink);
-    font-weight: 640;
-    padding: var(--s2) var(--s4);
-    border-radius: var(--r-pill);
-    transition: transform var(--dur-1) var(--ease-out);
+  .empty-state h2 {
+    font-size: var(--fs-section);
   }
 
-  .cta:hover {
-    transform: translateY(-1px);
+  .lede {
+    color: var(--text-2);
+    max-width: 28rem;
   }
 
-  .empty {
-    border: 1px dashed var(--line);
-    border-radius: var(--r-tile);
-    padding: var(--s6);
-    display: flex;
-    flex-direction: column;
-    gap: var(--s4);
-    max-width: 46rem;
-  }
-
-  .empty h2 {
-    font-size: var(--fs-h2);
-  }
-
-  .empty ol {
+  ol {
     margin: 0;
-    padding-left: var(--s5);
+    padding-left: 18px;
     display: flex;
     flex-direction: column;
-    gap: var(--s2);
+    gap: 6px;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+    text-align: left;
+    max-width: 30rem;
   }
 
-  .ghost {
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: var(--r-pill);
-    padding: var(--s2) var(--s4);
-    transition:
-      border-color var(--dur-1) var(--ease-out),
-      color var(--dur-1) var(--ease-out);
-  }
-
-  .ghost:hover:not(:disabled) {
-    color: var(--volt);
-    border-color: var(--volt);
-  }
-
-  .ghost:disabled {
-    opacity: 0.5;
-    cursor: default;
+  ol code {
+    font-family: var(--mono);
+    font-size: var(--fs-xs);
   }
 
   .help {
     display: flex;
     flex-direction: column;
-    gap: var(--s2);
-    color: var(--text-dim);
+    gap: 10px;
+    color: var(--text-2);
     font-size: var(--fs-sm);
-    border-top: 1px dashed var(--line);
-    padding-top: var(--s4);
+    border-top: 1px solid var(--sep);
+    padding-top: 16px;
+    max-width: 30rem;
   }
 
   .help code {
     display: block;
-    background: var(--ink-1);
-    border: 1px solid var(--line);
-    border-radius: var(--r-tile);
-    padding: var(--s2) var(--s3);
+    background: var(--inset);
+    border-radius: var(--r-input);
+    padding: 8px 12px;
     color: var(--text);
     font-size: var(--fs-xs);
+    font-family: var(--mono);
     overflow-x: auto;
     user-select: text;
+    text-align: left;
   }
 </style>
