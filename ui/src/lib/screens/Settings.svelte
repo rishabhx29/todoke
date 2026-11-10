@@ -2,6 +2,7 @@
   import { getVersion } from "@tauri-apps/api/app";
   import { setDeviceName } from "../api";
   import { app } from "../state.svelte";
+  import { icons } from "../icons";
   import { copyText } from "../clipboard";
 
   let nameDraft = $state<string | null>(null);
@@ -46,65 +47,74 @@
   }
 </script>
 
-<header class="head">
+<header class="page-head">
   <div>
     <h1>Settings</h1>
-    <p class="sub">This device — who the network sees.</p>
+    <p class="page-sub">This device — who the network sees.</p>
   </div>
 </header>
 
-<section class="panel">
-  <h2>Device name</h2>
-  <div class="name-row">
-    <input
-      type="text"
-      value={displayName}
-      oninput={(e) => (nameDraft = e.currentTarget.value)}
-      maxlength="64"
-      aria-label="Device name"
-      spellcheck="false"
-    />
-    <button type="button" class="cta" disabled={!dirty || saving} onclick={() => void saveName()}>
-      {saving ? "Saving…" : savedFlash ? "Saved ✓" : "Save"}
-    </button>
-  </div>
-  {#if saveError}
-    <p class="error" role="alert">{saveError}</p>
-  {:else}
-    <p class="note">Renaming while receive mode is on restarts the announcement.</p>
-  {/if}
-</section>
+<div class="group">
+  <p class="group-label">Device name</p>
+  <section class="card">
+    <div class="row">
+      <input
+        type="text"
+        value={displayName}
+        oninput={(e) => (nameDraft = e.currentTarget.value)}
+        maxlength="64"
+        aria-label="Device name"
+        spellcheck="false"
+      />
+      <button type="button" class="btn btn-primary" disabled={!dirty || saving} onclick={() => void saveName()}>
+        {saving ? "Saving…" : savedFlash ? "Saved ✓" : "Save"}
+      </button>
+    </div>
+    {#if saveError}
+      <p class="row-note error" role="alert">{saveError}</p>
+    {:else}
+      <p class="row-note">Renaming while receive mode is on restarts the announcement.</p>
+    {/if}
+  </section>
+</div>
 
-<section class="panel">
-  <h2>Fingerprint</h2>
-  <p class="note">
-    The short code friends can check out-of-band to be sure it's really you.
-  </p>
-  <div class="fp-row">
-    <code class="fp">{app.identity?.fingerprint ?? "—"}</code>
-    <button type="button" class="ghost" onclick={() => void copyFp()}>
-      {fpCopied ? "Copied ✓" : "Copy"}
-    </button>
-  </div>
-</section>
+<div class="group">
+  <p class="group-label">Fingerprint</p>
+  <section class="card">
+    <div class="row">
+      <div class="fp-copy">
+        <code class="fp mono">{app.identity?.fingerprint ?? "—"}</code>
+        <p class="row-note fp-note">
+          The short code friends can check out-of-band to be sure it's really you.
+        </p>
+      </div>
+      <button type="button" class="btn btn-ghost" onclick={() => void copyFp()}>
+        <span class="ico ico-16">{@html icons.copy}</span>
+        {fpCopied ? "Copied ✓" : "Copy"}
+      </button>
+    </div>
+  </section>
+</div>
 
-<section class="panel">
-  <h2>Folders</h2>
-  <dl class="paths">
-    <div>
-      <dt>Data directory</dt>
-      <dd>{app.identity?.dataDir ?? "—"}</dd>
-    </div>
-    <div>
-      <dt>Staging (in-progress transfers)</dt>
-      <dd>{app.identity?.stagingDir ?? "—"}</dd>
-    </div>
-    <div>
-      <dt>Default receive target</dt>
-      <dd>{app.identity?.defaultTarget ?? "—"}</dd>
-    </div>
-  </dl>
-</section>
+<div class="group">
+  <p class="group-label">Folders</p>
+  <section class="card">
+    <dl class="paths">
+      <div class="row">
+        <dt>Data directory</dt>
+        <dd>{app.identity?.dataDir ?? "—"}</dd>
+      </div>
+      <div class="row">
+        <dt>Staging (in-progress transfers)</dt>
+        <dd>{app.identity?.stagingDir ?? "—"}</dd>
+      </div>
+      <div class="row">
+        <dt>Default receive target</dt>
+        <dd>{app.identity?.defaultTarget ?? "—"}</dd>
+      </div>
+    </dl>
+  </section>
+</div>
 
 <footer class="foot">
   <p>
@@ -114,138 +124,133 @@
 </footer>
 
 <style>
-  .head {
-    margin-bottom: var(--s5);
-  }
-
-  h1 {
-    font-size: var(--fs-h1);
-  }
-
-  h2 {
-    font-size: var(--fs-h3);
-    margin-bottom: var(--s2);
-  }
-
-  .sub {
-    color: var(--text-dim);
-    font-size: var(--fs-sm);
-    margin-top: var(--s1);
-  }
-
-  .panel {
-    border: 1px dashed var(--line);
-    border-radius: var(--r-tile);
-    padding: var(--s5);
+  .group {
     max-width: 46rem;
-    margin-bottom: var(--s4);
+    margin-bottom: 24px;
   }
 
-  .name-row {
+  .group-label {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-2);
+    margin: 0 0 6px 12px;
+  }
+
+  .card {
+    padding: 4px 16px;
+  }
+
+  .row {
     display: flex;
-    gap: var(--s3);
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    min-height: 44px;
+    padding: 8px 0;
   }
 
-  input {
-    flex: 1;
-    background: var(--ink-1);
-    border: 1px solid var(--line);
-    border-radius: var(--r-tile);
-    padding: var(--s2) var(--s3);
+  .row + .row,
+  .row-note {
+    border-top: 1px solid var(--sep);
   }
 
-  input:focus {
-    border-color: var(--volt);
-    outline: none;
-  }
-
-  .cta {
-    background: var(--volt);
-    color: var(--volt-ink);
-    font-weight: 640;
-    padding: var(--s2) var(--s4);
-    border-radius: var(--r-pill);
-  }
-
-  .cta:disabled {
-    opacity: 0.4;
-    cursor: default;
-  }
-
-  .ghost {
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: var(--r-pill);
-    padding: var(--s2) var(--s4);
-    transition:
-      border-color var(--dur-1) var(--ease-out),
-      color var(--dur-1) var(--ease-out);
-  }
-
-  .ghost:hover {
-    color: var(--volt);
-    border-color: var(--volt);
-  }
-
-  .note {
-    color: var(--text-dim);
+  .row-note {
+    color: var(--text-2);
     font-size: var(--fs-sm);
-    margin-top: var(--s3);
+    margin: 0;
+    padding: 8px 0;
+    min-height: 32px;
   }
 
   .error {
     color: var(--err);
-    font-size: var(--fs-sm);
-    margin-top: var(--s3);
     user-select: text;
   }
 
-  .fp-row {
+  input {
+    flex: 1;
+    min-width: 0;
+    background: var(--inset);
+    border: 1px solid transparent;
+    border-radius: var(--r-input);
+    padding: 7px 11px;
+    font-size: var(--fs-body);
+    transition:
+      border-color var(--dur-1) var(--ease-out),
+      box-shadow var(--dur-1) var(--ease-out);
+  }
+
+  input:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .fp-copy {
     display: flex;
-    align-items: center;
-    gap: var(--s3);
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    flex: 1;
   }
 
   .fp {
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
-    font-size: 1.05rem;
-    color: var(--text-hi);
-    background: var(--ink-1);
-    border: 1px solid var(--line);
-    border-radius: var(--r-tile);
-    padding: var(--s2) var(--s3);
-    letter-spacing: 0.04em;
+    font-size: 11.5px;
+    color: var(--text);
+    background: var(--inset);
+    border-radius: var(--r-input);
+    padding: 7px 11px;
+    letter-spacing: 0.03em;
     user-select: text;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .fp-note {
+    border-top: none;
+    padding: 0;
+    min-height: 0;
+  }
+
+  .btn-ghost {
+    align-self: center;
   }
 
   .paths {
     margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--s3);
+  }
+
+  .paths .row {
+    justify-content: flex-start;
   }
 
   .paths dt {
-    color: var(--text-dim);
-    font-size: var(--fs-xs);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    color: var(--text);
+    font-size: var(--fs-body);
+    flex: none;
   }
 
   .paths dd {
-    margin: 2px 0 0;
-    color: var(--text);
+    margin: 0;
+    color: var(--text-2);
     font-size: var(--fs-sm);
+    font-family: var(--mono);
+    text-align: right;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     user-select: text;
-    word-break: break-all;
+    min-width: 0;
+    flex: 1;
   }
 
   .foot {
-    color: var(--text-dim);
+    color: var(--text-3);
     font-size: var(--fs-xs);
-    border-top: 1px dashed var(--line);
-    padding-top: var(--s4);
+    border-top: 1px solid var(--sep);
+    padding-top: 16px;
     max-width: 46rem;
   }
 </style>
