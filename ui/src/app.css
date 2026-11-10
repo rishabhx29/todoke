@@ -1,73 +1,117 @@
 /* ==========================================================================
-   Todoke desktop — same DNA as todoke.tech:
-   dark asphalt canvas, one volt accent, lane-dash dividers, Archivo.
+   Todoke desktop — Apple design language (macOS Sonoma era).
+   Calm, translucent, precise: system type, hairline cards, soft elevation,
+   one coral accent, 160–220ms ease-out motion, transform/opacity only.
    ========================================================================== */
 
-@font-face {
-  font-family: "Archivo";
-  src: url("/fonts/archivo-var-latin.woff2") format("woff2-variations");
-  font-weight: 100 900;
-  font-stretch: 62% 125%;
-  font-style: normal;
-  font-display: swap;
+:root {
+  color-scheme: light dark;
+
+  /* Surfaces */
+  --bg: #f5f5f7;
+  --sidebar: rgba(243, 242, 247, 0.82);
+  --surface: #ffffff;
+  --inset: rgba(0, 0, 0, 0.045); /* wells: code chips, inputs on cards */
+  --fill: rgba(0, 0, 0, 0.05); /* hover / resting control fill */
+  --fill-hover: rgba(0, 0, 0, 0.08);
+  --hairline: rgba(0, 0, 0, 0.08);
+  --sep: rgba(0, 0, 0, 0.07);
+  --track: rgba(0, 0, 0, 0.08); /* progress track */
+
+  /* Text */
+  --text: #1d1d1f;
+  --text-2: #6e6e73;
+  --text-3: #aeaeb2;
+
+  /* Accent + status */
+  --accent: #f76f53;
+  --on-accent: #ffffff;
+  --accent-soft: rgba(247, 111, 83, 0.1); /* 10% selected bg */
+  --accent-line: rgba(247, 111, 83, 0.4);
+  --ok: #30a14e;
+  --warn: #b8860b;
+  --err: #c93400;
+
+  /* Elevation */
+  --shadow-card: 0 0 0 0.5px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.1);
+
+  /* Type — system stack only, no bundled font */
+  --font:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI Variable Text",
+    "Segoe UI", Inter, system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --fs-title: 22px; /* page title, 600, -0.01em */
+  --fs-section: 15px; /* section heading, 600 */
+  --fs-body: 13px;
+  --fs-sm: 12px;
+  --fs-xs: 11px;
+
+  /* Radii */
+  --r-card: 12px;
+  --r-btn: 8px;
+  --r-input: 8px;
+  --r-hero: 16px;
+  --r-pill: 999px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.25, 1, 0.35, 1);
+  --dur-1: 160ms;
+  --dur-2: 200ms;
+
+  /* Layout */
+  --titlebar-h: 40px;
+  --rail-w: 200px;
+
+  /* Scrollbar */
+  --scroll-thumb: rgba(0, 0, 0, 0.22);
+
+  /* Legacy aliases — screens not yet restyled read these; removed once
+     every consumer is on the new names. */
+  --ink-0: var(--bg);
+  --ink-1: var(--surface);
+  --ink-2: var(--fill);
+  --line: var(--sep);
+  --text-hi: var(--text);
+  --text-dim: var(--text-2);
+  --volt: var(--accent);
+  --volt-ink: var(--on-accent);
+  --glow: var(--ok);
+  --fs-h1: var(--fs-title);
+  --fs-h2: var(--fs-section);
+  --fs-h3: var(--fs-section);
+  --r-tile: var(--r-card);
 }
 
-:root {
-  /* Color — OKLCH source of truth; hex = computed sRGB fallback */
-  --ink-0: #080d11;
-  --ink-1: #13181d;
-  --ink-2: #1a2026;
-  --line: #2b3138;
-  --text-hi: #f4f4ef;
-  --text: #cfd5db;
-  --text-dim: #9fa5ac;
-  --volt: #f2e309;
-  --volt-ink: #10100b;
-  --glow: #16827d;
-  --ok: #7ad97a;
-  --warn: #e2b93b;
-  --err: #e2604e;
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e20;
+    --sidebar: rgba(35, 35, 38, 0.72);
+    --surface: #2a2a2d;
+    --inset: rgba(0, 0, 0, 0.24);
+    --fill: rgba(255, 255, 255, 0.07);
+    --fill-hover: rgba(255, 255, 255, 0.1);
+    --hairline: rgba(255, 255, 255, 0.1);
+    --sep: rgba(255, 255, 255, 0.09);
+    --track: rgba(255, 255, 255, 0.12);
 
-  @media (color-gamut: p3) {
-    --volt: oklch(0.9 0.2 105);
-    --glow: oklch(0.55 0.105 190);
+    --text: #f5f5f7;
+    --text-2: #98989d;
+    --text-3: #6e6e73;
+
+    --accent: #f78d70;
+    --on-accent: #1e1e20;
+    --accent-soft: rgba(247, 141, 112, 0.14);
+    --accent-line: rgba(247, 141, 112, 0.45);
+    --ok: #32d74b;
+    --warn: #ffd60a;
+    --err: #ff453a;
+
+    --shadow-card: 0 0 0 0.5px rgba(255, 255, 255, 0.08);
+    --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.45);
+
+    --scroll-thumb: rgba(255, 255, 255, 0.25);
   }
-
-  /* Type */
-  --font: "Archivo", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
-  --fs-h1: 1.9rem;
-  --fs-h2: 1.35rem;
-  --fs-h3: 1.1rem;
-  --fs-body: 1rem;
-  --fs-sm: 0.875rem;
-  --fs-xs: 0.8125rem;
-
-  /* Space (4px base) */
-  --s1: 0.25rem;
-  --s2: 0.5rem;
-  --s3: 0.75rem;
-  --s4: 1rem;
-  --s5: 1.5rem;
-  --s6: 2rem;
-  --s7: 3rem;
-
-  /* Radius */
-  --r-pill: 999px;
-  --r-tile: 0.625rem;
-
-  /* Motion — one easing language, restrained for app UI */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --dur-1: 160ms;
-  --dur-2: 240ms;
-
-  /* Structure */
-  --head-h: 4rem;
-  --rail-w: 13.5rem;
-  --lane-dash: repeating-linear-gradient(
-    90deg,
-    var(--line) 0 1.5rem,
-    transparent 1.5rem 2.5rem
-  );
 }
 
 *,
@@ -77,17 +121,16 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 body {
   margin: 0;
-  background: var(--ink-0);
+  background: var(--bg);
   color: var(--text);
   font-family: var(--font);
   font-size: var(--fs-body);
-  line-height: 1.55;
-  font-optical-sizing: auto;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -103,10 +146,10 @@ body {
 h1,
 h2,
 h3 {
-  color: var(--text-hi);
+  color: var(--text);
   margin: 0;
-  font-weight: 640;
-  letter-spacing: -0.015em;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 p {
@@ -119,12 +162,22 @@ button {
   background: none;
   border: none;
   cursor: pointer;
+  transition: transform var(--dur-1) var(--ease-out);
+}
+
+/* Press = scale(0.97); hover states stay to background/color changes. */
+button:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  cursor: default;
 }
 
 input,
 textarea {
   font: inherit;
-  color: var(--text-hi);
+  color: var(--text);
 }
 
 a {
@@ -132,22 +185,218 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--volt);
+  outline: 2px solid color-mix(in oklab, var(--accent) 45%, transparent);
   outline-offset: 2px;
-  border-radius: 2px;
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--line);
-  border-radius: 5px;
-  border: 2px solid var(--ink-0);
+  background: var(--scroll-thumb);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Shared primitives
+   -------------------------------------------------------------------------- */
+
+/* Page header: title top-left, actions top-right */
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--s4);
+  margin-bottom: 20px;
+}
+
+.page-head h1 {
+  font-size: var(--fs-title);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.page-sub {
+  color: var(--text-2);
+  font-size: var(--fs-body);
+  margin-top: 3px;
+  max-width: 44rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: none;
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1;
+  padding: 7px 14px;
+  border-radius: var(--r-btn);
+  user-select: none;
+  transition:
+    transform var(--dur-1) var(--ease-out),
+    background var(--dur-1) var(--ease-out),
+    border-color var(--dur-1) var(--ease-out),
+    color var(--dur-1) var(--ease-out);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--accent) 92%, #000);
+}
+
+.btn-primary:disabled {
+  opacity: 0.4;
+}
+
+.btn-ghost {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  color: var(--text);
+  padding: 6px 13px;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--fill);
+}
+
+.btn-ghost:disabled {
+  opacity: 0.45;
+}
+
+.btn-danger {
+  background: var(--surface);
+  border: 1px solid color-mix(in oklab, var(--err) 35%, transparent);
+  color: var(--err);
+  padding: 6px 13px;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--err) 10%, var(--surface));
+}
+
+.btn-lg {
+  font-size: var(--fs-section);
+  padding: 10px 22px;
+  border-radius: var(--r-btn);
+}
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border-radius: var(--r-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* Tag pill */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  line-height: 1;
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  background: var(--fill);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.pill-accent {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Progress bar: 4px, rounded, accent fill on track */
+.bar {
+  height: 4px;
+  border-radius: var(--r-pill);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transform-origin: 0 50%;
+  transition: transform var(--dur-2) var(--ease-out);
+}
+
+/* Mono text */
+.mono {
+  font-family: var(--mono);
+  user-select: text;
+}
+
+/* Error line */
+.form-error {
+  color: var(--err);
+  font-size: var(--fs-body);
+  user-select: text;
+}
+
+/* Icon wrapper: svg paths carry stroke-width 2.25 in a 24px viewBox so a
+   16px render draws a 1.5px stroke; bigger sizes thin it back to 1.5. */
+.ico {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+}
+
+.ico svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ico-16 {
+  width: 16px;
+  height: 16px;
+}
+
+.ico-20 {
+  width: 20px;
+  height: 20px;
+}
+
+.ico-20 svg {
+  stroke-width: 1.8;
+}
+
+.ico-40 {
+  width: 40px;
+  height: 40px;
+  color: var(--text-3);
+}
+
+.ico-40 svg {
+  stroke-width: 0.9;
+}
+
+/* Empty state: 40px stroke icon, secondary line, centered, airy */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--s3);
+  padding: 56px var(--s6) var(--s6);
 }
 
 /* Reduced motion: entrances/pulses become instant, nothing essential lost. */
