@@ -15,8 +15,9 @@
         "title": "Todoke — it arrives",
         "width": 1000,
         "height": 700,
-        "minWidth": 780,
-        "minHeight": 580,
+        "minWidth": 860,
+        "minHeight": 560,
+        "decorations": false,
         "center": true
       }
     ],
