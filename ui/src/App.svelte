@@ -9,6 +9,22 @@
 
   const win = getCurrentWindow();
 
+  // Windows-style caption buttons on Windows/Linux; macOS traffic lights on
+  // Mac — the window chrome stays platform-appropriate per build target.
+  const isMac = /Mac|iPhone|iPad/.test(navigator.userAgent);
+
+  let maximized = $state(false);
+  $effect(() => {
+    void win.isMaximized().then((v) => (maximized = v));
+    let unlisten: (() => void) | undefined;
+    void win
+      .onResized(async () => {
+        maximized = await win.isMaximized();
+      })
+      .then((u) => (unlisten = u));
+    return () => unlisten?.();
+  });
+
   const nav: { id: typeof app.screen; label: string; icon: string }[] = [
     { id: "devices", label: "Devices", icon: icons.laptop },
     { id: "send", label: "Send", icon: icons.send },
@@ -35,41 +51,83 @@
 </script>
 
 <div class="shell">
-  <!-- Frameless-window titlebar: traffic lights + full-width drag region -->
+  <!-- Frameless-window titlebar: platform window controls + full-width drag region -->
   <div class="titlebar" data-tauri-drag-region>
-    <div class="lights" data-tauri-drag-region>
-      <button
-        type="button"
-        class="tl tl-close"
-        aria-label="Close window"
-        onclick={() => void win.close()}
-      >
-        <svg viewBox="0 0 10 10" aria-hidden="true">
-          <path d="M3 3l4 4M7 3 3 7" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        class="tl tl-min"
-        aria-label="Minimize window"
-        onclick={() => void win.minimize()}
-      >
-        <svg viewBox="0 0 10 10" aria-hidden="true">
-          <path d="M2.6 5h4.8" />
-        </svg>
-      </button>
-      <button
-        type="button"
-        class="tl tl-zoom"
-        aria-label="Zoom window"
-        onclick={() => void win.toggleMaximize()}
-      >
-        <svg viewBox="0 0 10 10" aria-hidden="true">
-          <path d="M2.4 7.6V5.1l2.5 2.5z" />
-          <path d="M7.6 2.4H5.1l2.5 2.5z" />
-        </svg>
-      </button>
-    </div>
+    {#if isMac}
+      <div class="lights" data-tauri-drag-region>
+        <button
+          type="button"
+          class="tl tl-close"
+          aria-label="Close window"
+          onclick={() => void win.close()}
+        >
+          <svg viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M3 3l4 4M7 3 3 7" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="tl tl-min"
+          aria-label="Minimize window"
+          onclick={() => void win.minimize()}
+        >
+          <svg viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M2.6 5h4.8" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="tl tl-zoom"
+          aria-label="Zoom window"
+          onclick={() => void win.toggleMaximize()}
+        >
+          <svg viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M2.4 7.6V5.1l2.5 2.5z" />
+            <path d="M7.6 2.4H5.1l2.5 2.5z" />
+          </svg>
+        </button>
+      </div>
+    {:else}
+      <div class="caps">
+        <button
+          type="button"
+          class="cap"
+          aria-label="Minimize"
+          onclick={() => void win.minimize()}
+        >
+          <svg viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M1 5h8" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="cap"
+          aria-label={maximized ? "Restore" : "Maximize"}
+          onclick={() => void win.toggleMaximize()}
+        >
+          {#if maximized}
+            <svg viewBox="0 0 10 10" aria-hidden="true">
+              <rect x="1" y="3.2" width="5.8" height="5.8" rx="0.6" />
+              <path d="M3.2 3.2V1.9a0.9 0.9 0 0 1 0.9-0.9h3.9a0.9 0.9 0 0 1 0.9 0.9v3.9a0.9 0.9 0 0 1-0.9 0.9H6.8" />
+            </svg>
+          {:else}
+            <svg viewBox="0 0 10 10" aria-hidden="true">
+              <rect x="1" y="1" width="8" height="8" rx="0.8" />
+            </svg>
+          {/if}
+        </button>
+        <button
+          type="button"
+          class="cap cap-close"
+          aria-label="Close"
+          onclick={() => void win.close()}
+        >
+          <svg viewBox="0 0 10 10" aria-hidden="true">
+            <path d="M1.4 1.4l7.2 7.2M8.6 1.4l-7.2 7.2" />
+          </svg>
+        </button>
+      </div>
+    {/if}
   </div>
 
   <aside class="rail">
@@ -120,6 +178,7 @@
     grid-template-columns: var(--rail-w) 1fr;
     grid-template-rows: var(--titlebar-h) 1fr;
     height: 100dvh;
+    box-shadow: 0 0 0 1px var(--hairline); /* frameless window edge */
   }
 
   /* ---- Titlebar -------------------------------------------------------- */
@@ -190,6 +249,57 @@
   .tl:disabled {
     filter: saturate(0);
     opacity: 0.85;
+  }
+
+  /* Windows / Linux caption buttons — 46×32 hover zones, Win11 geometry */
+  .caps {
+    margin-left: auto;
+    display: flex;
+    align-self: stretch;
+  }
+
+  .cap {
+    width: 46px;
+    border: none;
+    padding: 0;
+    background: transparent;
+    display: grid;
+    place-items: center;
+    transition: background-color 120ms ease;
+  }
+
+  .cap svg {
+    width: 10px;
+    height: 10px;
+    fill: none;
+    stroke: var(--text-2);
+    stroke-width: 1;
+    stroke-linecap: round;
+    transition: stroke 120ms ease;
+  }
+
+  .cap:hover {
+    background: var(--cap-hover);
+  }
+
+  .cap:hover svg {
+    stroke: var(--text);
+  }
+
+  .cap:active {
+    background: var(--cap-active);
+  }
+
+  .cap-close:hover {
+    background: var(--cap-close-hover);
+  }
+
+  .cap-close:hover svg {
+    stroke: #fff;
+  }
+
+  .cap-close:active {
+    background: var(--cap-close-active);
   }
 
   /* ---- Sidebar ---------------------------------------------------------- */

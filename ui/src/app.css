@@ -65,6 +65,12 @@
 
   /* Scrollbar */
   --scroll-thumb: rgba(0, 0, 0, 0.22);
+
+  /* Window caption buttons (Windows/Linux chrome) */
+  --cap-hover: rgba(0, 0, 0, 0.05);
+  --cap-active: rgba(0, 0, 0, 0.09);
+  --cap-close-hover: #e81123;
+  --cap-close-active: #bf0f1d;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -95,6 +101,12 @@
     --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.45);
 
     --scroll-thumb: rgba(255, 255, 255, 0.25);
+
+    /* Window caption buttons */
+    --cap-hover: rgba(255, 255, 255, 0.06);
+    --cap-active: rgba(255, 255, 255, 0.1);
+    --cap-close-hover: #c42b1c;
+    --cap-close-active: #a32014;
   }
 }
 
