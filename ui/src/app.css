@@ -118,6 +118,7 @@
 
 html {
   color-scheme: light dark;
+  background: var(--bg); /* WebView2 rounds short of the window edge — never let white show */
 }
 
 body {

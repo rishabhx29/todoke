@@ -9,8 +9,18 @@ mod dto;
 mod state;
 
 use state::{EngineMutex, EngineState, data_dir};
-use tauri::Manager;
+use tauri::{Manager, Theme};
+use tauri::window::Color;
 use todoke_core::identity::DeviceIdentity;
+
+/// Frameless windows expose the window background wherever the WebView rounds
+/// a hair short of the window edge (fractional-DPI rounding — the "white
+/// sliver that comes and goes"). Keep it theme-synced so an unpainted pixel
+/// is always app-colored, never white.
+fn apply_theme_background(window: &tauri::WebviewWindow, dark: bool) {
+    let (r, g, b) = if dark { (0x1E, 0x1E, 0x20) } else { (0xF5, 0xF5, 0xF7) };
+    let _ = window.set_background_color(Some(Color(r, g, b, 255)));
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -30,6 +40,16 @@ pub fn run() {
                 identity_error,
                 data_dir,
             )));
+            if let Some(window) = app.get_webview_window("main") {
+                let dark = window.theme().map(|t| t == Theme::Dark).unwrap_or(true);
+                apply_theme_background(&window, dark);
+                let themed = window.clone();
+                window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::ThemeChanged(theme) = event {
+                        apply_theme_background(&themed, *theme == Theme::Dark);
+                    }
+                });
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
