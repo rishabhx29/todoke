@@ -6,6 +6,13 @@ const svg = (body: string): string =>
   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${body}</svg>`;
 
 export const icons = {
+  /** Brand mark — the receipt (master: tools/gen-logo.mjs). Fill-based, so
+      it sits outside the stroke-svg helper; paper follows currentColor, the
+      check stays brand coral on both themes. */
+  logo: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path fill="currentColor" d="M7.2 3h9.6a1.6 1.6 0 0 1 1.6 1.6v12.9l-2.13 1.95-2.14-1.95-2.13 1.95-2.14-1.95-2.13 1.95-2.13-1.95V4.6A1.6 1.6 0 0 1 7.2 3Z"/>
+    <path stroke="#F76F53" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" d="M8.6 11.6l2.6 2.6 4.9-5.1"/>
+  </svg>`,
   /** Sidebar · Devices */
   laptop: svg(
     `<rect x="4.5" y="4.5" width="15" height="10.5" rx="2"/>

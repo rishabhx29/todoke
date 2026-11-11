@@ -132,7 +132,10 @@
 
   <aside class="rail">
     <div class="brand">
-      <span class="wordmark">todoke</span>
+      <div class="brand-row">
+        <span class="brand-mark">{@html icons.logo}</span>
+        <span class="wordmark">todoke</span>
+      </div>
       <span class="tagline">it arrives</span>
     </div>
     <nav class="rail-nav" aria-label="Screens">
@@ -321,6 +324,25 @@
     flex-direction: column;
     gap: 1px;
     padding: 0 10px 18px;
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .brand-mark {
+    width: 19px;
+    height: 19px;
+    display: grid;
+    place-items: center;
+    flex: none;
+  }
+
+  .brand-mark :global(svg) {
+    width: 100%;
+    height: 100%;
   }
 
   .wordmark {
