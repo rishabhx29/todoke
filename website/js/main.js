@@ -38,22 +38,55 @@ if ("IntersectionObserver" in window && revealEls.length) {
   revealEls.forEach((el) => el.classList.add("is-in"));
 }
 
-/* ------------------------------------------------- feature ⇄ view swap */
-const featItems = [...document.querySelectorAll(".featitem")];
-const featViews = [...document.querySelectorAll(".featview__stack img")];
-const featIdx = document.querySelector(".featview__idx");
-function setFeature(i) {
-  featItems.forEach((el, j) => el.classList.toggle("is-active", i === j));
-  featViews.forEach((el, j) => el.classList.toggle("is-active", i === j));
-  if (featIdx) featIdx.textContent = pad2(i + 1);
+/* ---------------------------------------------------- hero demo player */
+const demoFrames = [...document.querySelectorAll("#demo-frame img")];
+const demoCaption = document.getElementById("demo-caption");
+const demoRail = document.getElementById("demo-rail");
+const DEMO_CAPTIONS = [
+  "Todoke is listening — no accounts, no pairing ceremony.",
+  "Devices on the same network simply appear — or get saved by address.",
+  "Drop a 330 MiB render and two photos onto the lane.",
+  "Four parallel streams at wire speed — per-file bars, live ETA.",
+  "Two files already finalized and verifying as they land.",
+  "Arrived ✓ — every byte verified, receipt with BLAKE3 hashes.",
+  "Receive runs quietly: the arrival is logged, just now.",
+];
+let demoIdx = Math.max(0, demoFrames.findIndex((f) => f.classList.contains("on")));
+function showScene(i) {
+  if (!demoFrames.length) return;
+  demoIdx = (i + demoFrames.length) % demoFrames.length;
+  const next = demoFrames[demoIdx];
+  if (next.dataset.src && !next.src) next.src = next.dataset.src; // load just-in-time
+  const upcoming = demoFrames[(demoIdx + 1) % demoFrames.length];
+  if (upcoming.dataset.src && !upcoming.src) upcoming.src = upcoming.dataset.src; // pre-warm
+  demoFrames.forEach((f, j) => f.classList.toggle("on", j === demoIdx));
+  if (demoCaption) demoCaption.textContent = DEMO_CAPTIONS[demoIdx] ?? "";
+  if (demoRail) demoRail.style.transform = `scaleX(${((demoIdx + 1) / demoFrames.length).toFixed(3)})`;
 }
-if (featItems.length && featViews.length && "IntersectionObserver" in window) {
-  const io = new IntersectionObserver((entries) => {
-    for (const e of entries) {
-      if (e.isIntersecting) setFeature(Number(e.target.dataset.feat));
+if (demoFrames.length) {
+  showScene(demoIdx);
+  if (!REDUCED && !AUTOMATED) {
+    let demoTimer = null;
+    const play = () => {
+      clearInterval(demoTimer);
+      demoTimer = setInterval(() => showScene(demoIdx + 1), 3400);
+    };
+    const stop = () => clearInterval(demoTimer);
+    play();
+    // advance on click; pause while offscreen or hidden
+    document.getElementById("demo-frame")?.addEventListener("click", () => {
+      showScene(demoIdx + 1);
+      play();
+    });
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver((entries) => {
+        entries[0].isIntersecting ? play() : stop();
+      }, { threshold: 0.2 }).observe(document.getElementById("demo-frame"));
     }
-  }, { rootMargin: "-42% 0px -42% 0px" });
-  featItems.forEach((el) => io.observe(el));
+    document.addEventListener("visibilitychange", () => {
+      document.hidden ? stop() : play();
+    });
+  }
 }
 
 /* --------------------------------------------------- how step ⇄ number */
@@ -208,7 +241,7 @@ document.querySelectorAll('a[href^="#"]').forEach((a) => {
 });
 
 /* ------------------------------------------------------- scrollspy nav */
-const spySections = ["features", "how", "measured", "questions"]
+const spySections = ["demo", "features", "measured", "questions"]
   .map((id) => ({ id, el: document.getElementById(id) }))
   .filter((s) => s.el);
 const spyLinks = new Map(

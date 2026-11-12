@@ -19,7 +19,7 @@
   <meta name="twitter:title" content="Todoke — Files that arrive.">
   <meta name="twitter:description" content="Local-network speed, verified end-to-end. No cloud, no accounts, no size limits.">
   <meta name="twitter:image" content="https://todoke.tech/img/og.png">
-  <link rel="preload" href="img/gui-devices.png" as="image" fetchpriority="high">
+  <link rel="preload" href="img/demo/scene-3-send-picked.png" as="image" fetchpriority="high">
   <link rel="preload" href="fonts/bricolage-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/instrument-serif-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/instrument-serif-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -48,8 +48,8 @@
     <div class="wrap site-head__in">
       <a class="wordmark" href="#top" aria-label="Todoke — home">todoke<span class="wordmark__dot" aria-hidden="true"></span></a>
       <nav class="site-nav" aria-label="Site">
+        <a class="site-nav__link" href="#demo">Demo</a>
         <a class="site-nav__link" href="#features">Features</a>
-        <a class="site-nav__link" href="#how">How it works</a>
         <a class="site-nav__link" href="#measured">Measured</a>
         <a class="site-nav__link" href="#questions">Questions</a>
         <a class="site-nav__link site-nav__link--ext" href="https://github.com/todokeapp/todoke" rel="me noopener">GitHub</a>
@@ -71,13 +71,27 @@
           <a class="btn btn--ink" href="#download" data-magnet>Download Todoke</a>
           <a class="btn btn--paper" href="https://github.com/todokeapp/todoke" rel="noopener" data-magnet>Star on GitHub</a>
         </div>
+      </div>
 
-        <figure class="hero__shot" data-reveal style="--reveal-delay:280ms">
-          <div class="window">
-            <div class="window__bar"><span></span><span></span><span></span><span class="window__title">todoke — Devices</span></div>
-            <img src="img/gui-devices.png" alt="The Todoke app: Devices screen listing a nearby laptop" width="947" height="1032" loading="eager" fetchpriority="high">
+      <!-- ================================================== demo player -->
+      <div class="wrap" id="demo">
+        <figure class="demo" data-reveal style="--reveal-delay:280ms" aria-label="Recording of a real Todoke transfer: 330 MiB sent and verified">
+          <div class="demo__frame" id="demo-frame">
+            <img data-src="img/demo/scene-1-devices-scanning.png" alt="Todoke Devices screen listening for other devices on the network" width="1500" height="938">
+            <img data-src="img/demo/scene-2-devices-found.png" alt="Todoke Devices screen with the studio-laptop peer saved and listed" width="1500" height="938">
+            <img src="img/demo/scene-3-send-picked.png" alt="Todoke Send screen with a 330 MiB render and two photos picked" width="1500" height="938" class="on">
+            <img data-src="img/demo/scene-4-sending.png" alt="Todoke Send screen at 18 percent, 61 MiB per second, per-file progress bars" width="1500" height="938">
+            <img data-src="img/demo/scene-5-sending-late.png" alt="Todoke Send screen late in the transfer with two files finalized" width="1500" height="938">
+            <img data-src="img/demo/scene-6-receipt.png" alt="Todoke receipt: Arrived, every byte verified end-to-end, three BLAKE3 file hashes" width="1500" height="938">
+            <img data-src="img/demo/scene-7-receive-log.png" alt="Todoke Receive screen logging an incoming transfer of 2 files, 10 MiB" width="1500" height="938">
           </div>
-          <figcaption class="hero__caption">The actual app. Everything below is it doing its job.</figcaption>
+          <figcaption class="demo__foot">
+            <button type="button" class="demo__next" aria-label="Next scene">
+              <span class="demo__rail" aria-hidden="true"><i id="demo-rail"></i></span>
+            </button>
+            <p class="demo__caption" id="demo-caption">Todoke is listening — no accounts, no pairing ceremony.</p>
+            <span class="demo__tag">real transfer, recorded · 330&nbsp;MiB verified</span>
+          </figcaption>
         </figure>
       </div>
 
@@ -105,47 +119,53 @@
         <header class="section__head">
           <p class="eyebrow" data-reveal>why todoke</p>
           <h2 class="section__title" id="features-h" data-reveal>Everything it does, it does <em>properly</em>.</h2>
-          <p class="section__lead" data-reveal>Simple sharing is a solved problem. Todoke is built for the transfers that hurt — huge, flaky, interrupted — and for proof that what arrived is what you sent.</p>
+          <p class="section__lead" data-reveal>Simple sharing is a solved problem. Todoke is built for the transfers that hurt — huge, flaky, interrupted — and for proof that what arrived is what you sent. Every screenshot on this page is the real app.</p>
         </header>
 
-        <div class="featgrid">
-          <div class="featlist">
-            <article class="featitem" data-feat="0" data-reveal>
-              <span class="featitem__num" aria-hidden="true">01</span>
-              <h3 class="featitem__title">It finds your people.</h3>
-              <p class="featitem__copy">Open Todoke on the same Wi-Fi and your devices simply appear — no accounts, no pairing ceremony, no QR scavenger hunt. Devices identify each other cryptographically, so the laptop you send to is your laptop.</p>
-            </article>
-            <article class="featitem" data-feat="1" data-reveal>
-              <span class="featitem__num" aria-hidden="true">02</span>
-              <h3 class="featitem__title">Drag it over. Watch it move.</h3>
-              <p class="featitem__copy">Four parallel streams push your files at full wire speed, small files packed tight, progress to the byte. Your laptop falls asleep mid-transfer? Rerun the same send — it picks up exactly where the bytes stopped.</p>
-            </article>
-            <article class="featitem" data-feat="2" data-reveal>
-              <span class="featitem__num" aria-hidden="true">03</span>
-              <h3 class="featitem__title">Leave the lane open.</h3>
-              <p class="featitem__copy">Receive mode runs quietly and logs every arrival. Each transfer ends with a receipt — per-file BLAKE3 hashes you can check — so &ldquo;it sent fine&rdquo; becomes &ldquo;here&rsquo;s proof it arrived intact.&rdquo;</p>
-            </article>
-            <article class="featitem" data-feat="3" data-reveal>
-              <span class="featitem__num" aria-hidden="true">04</span>
-              <h3 class="featitem__title">Yours, verifiably.</h3>
-              <p class="featitem__copy">Your device carries a cryptographic fingerprint you can read out loud over a call. No accounts means nothing to breach, nothing to sell, nothing phoning home. The whole engine is open source — audit it yourself.</p>
-            </article>
-          </div>
-
-          <div class="featview" aria-hidden="true">
-            <div class="featview__sticky">
-              <div class="window featview__window">
-                <div class="window__bar"><span></span><span></span><span></span><span class="window__title">todoke</span></div>
-                <div class="featview__stack">
-                  <img src="img/gui-devices.png" alt="" width="947" height="1032" data-view="0" class="is-active">
-                  <img src="img/gui-send.png" alt="" width="947" height="521" data-view="1">
-                  <img src="img/gui-receive.png" alt="" width="947" height="521" data-view="2">
-                  <img src="img/gui-settings.png" alt="" width="947" height="521" data-view="3">
-                </div>
-              </div>
-              <div class="featview__count"><span class="featview__idx">01</span><span class="featview__sep">/</span>04</div>
+        <div class="frows">
+          <article class="frow">
+            <div class="frow__copy" data-reveal>
+              <h3 class="frow__title">It finds your people.</h3>
+              <p class="frow__text">Open Todoke on the same Wi-Fi and your devices simply appear — no accounts, no pairing ceremony, no QR scavenger hunt. And when a network blocks discovery (campus Wi-Fi loves that), add the device by address once and it&rsquo;s saved.</p>
             </div>
-          </div>
+            <figure class="frow__shot" data-reveal style="--reveal-delay:90ms">
+              <img src="img/demo/scene-2-devices-found.png" alt="Todoke Devices screen listing the saved studio-laptop peer with its fingerprint" width="1500" height="938" loading="lazy">
+              <figcaption>discovered over mDNS — or saved by address when the network blocks it</figcaption>
+            </figure>
+          </article>
+
+          <article class="frow frow--flip">
+            <div class="frow__copy" data-reveal>
+              <h3 class="frow__title">Drag it over. Watch it move.</h3>
+              <p class="frow__text">Four parallel streams push your files at full wire speed, small files packed tight, progress to the byte — with a live speed and ETA you can actually trust. Your laptop falls asleep mid-transfer? Rerun the same send — it picks up exactly where the bytes stopped.</p>
+            </div>
+            <figure class="frow__shot" data-reveal style="--reveal-delay:90ms">
+              <img src="img/demo/scene-4-sending.png" alt="Todoke Send screen at 18 percent of a 330 MiB transfer, 61 MiB per second, per-file progress bars" width="1500" height="938" loading="lazy">
+              <figcaption>330&nbsp;MiB in flight — four streams, per-file bars, live ETA</figcaption>
+            </figure>
+          </article>
+
+          <article class="frow">
+            <div class="frow__copy" data-reveal>
+              <h3 class="frow__title">Leave the lane open.</h3>
+              <p class="frow__text">Receive mode runs quietly in the background of every screen and logs every arrival. Anything sent from a device on your network lands — verified — whether you&rsquo;re looking or not.</p>
+            </div>
+            <figure class="frow__shot" data-reveal style="--reveal-delay:90ms">
+              <img src="img/demo/scene-7-receive-log.png" alt="Todoke Receive screen with receiving toggle on and an incoming transfer of 2 files, 10 MiB, logged" width="1500" height="938" loading="lazy">
+              <figcaption>receive runs quietly; everything that lands is logged</figcaption>
+            </figure>
+          </article>
+
+          <article class="frow frow--flip">
+            <div class="frow__copy" data-reveal>
+              <h3 class="frow__title">Yours, verifiably.</h3>
+              <p class="frow__text">Your device carries a cryptographic fingerprint you can read out loud over a call. Every transfer ends with a receipt listing each file&rsquo;s BLAKE3 hash — copy it, check it, keep it. No accounts means nothing to breach, nothing to sell, nothing phoning home. The whole engine is open source — audit it yourself.</p>
+            </div>
+            <figure class="frow__shot" data-reveal style="--reveal-delay:90ms">
+              <img src="img/demo/scene-6-receipt.png" alt="Todoke receipt screen: Arrived, every byte verified end-to-end, three files with BLAKE3 hashes and manifest hash" width="1500" height="938" loading="lazy">
+              <figcaption>the receipt lists every file&rsquo;s BLAKE3 hash — copy it, check it, keep it</figcaption>
+            </figure>
+          </article>
         </div>
       </div>
     </section>
@@ -174,29 +194,60 @@
             <article class="howstep" data-step="0" data-reveal>
               <h3 class="howstep__title">Open Todoke on both machines.</h3>
               <p class="howstep__copy">No wizards, no setup. The app comes up already listening, already advertising itself on your network, already listing the devices it can see.</p>
-              <div class="rec" role="img" aria-label="Placeholder for a recording: devices discovering each other">
-                <span class="rec__play" aria-hidden="true"></span>
-                <span class="rec__label">recording slot — devices discovering each other, ~10&nbsp;s</span>
-              </div>
+              <figure class="howshot">
+                  <img src="img/demo/scene-1-devices-scanning.png" alt="Todoke Devices screen listening for devices" width="1500" height="938" loading="lazy">
+              <figcaption>listening — the empty state is the feature working</figcaption>
+              </figure>
             </article>
             <article class="howstep" data-step="1" data-reveal>
               <h3 class="howstep__title">Pick the person next to you.</h3>
               <p class="howstep__copy">Drop files onto a device — one file or ten thousand. Todoke chunks, hashes and stripes them across parallel streams sized to the link.</p>
-              <div class="rec" role="img" aria-label="Placeholder for a recording: choosing a device and dropping files">
-                <span class="rec__play" aria-hidden="true"></span>
-                <span class="rec__label">recording slot — dropping files on a device, ~15&nbsp;s</span>
-              </div>
+              <figure class="howshot">
+                  <img src="img/demo/scene-3-send-picked.png" alt="Todoke Send screen with a render and two photos queued for a destination" width="1500" height="938" loading="lazy">
+              <figcaption>330&nbsp;MiB queued — destination chips, one click to send</figcaption>
+              </figure>
             </article>
             <article class="howstep" data-step="2" data-reveal>
               <h3 class="howstep__title">Watch it arrive, verified.</h3>
               <p class="howstep__copy">Progress to the byte on both ends, and a receipt when it lands: per-file BLAKE3 hashes proving what arrived is what you sent. Interrupted? It resumes, not restarts.</p>
-              <div class="rec" role="img" aria-label="Placeholder for a recording: transfer progress and the arrival receipt">
-                <span class="rec__play" aria-hidden="true"></span>
-                <span class="rec__label">recording slot — progress + receipt, ~15&nbsp;s</span>
-              </div>
+              <figure class="howshot">
+                  <img src="img/demo/scene-6-receipt.png" alt="Todoke receipt screen with verified file hashes" width="1500" height="938" loading="lazy">
+              <figcaption>Arrived ✓ — 3 files · 330&nbsp;MiB, verified end-to-end</figcaption>
+              </figure>
             </article>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- =========================================================== proof -->
+    <section class="section" id="receipt" aria-labelledby="receipt-h">
+      <div class="wrap">
+        <header class="section__head">
+          <p class="eyebrow" data-reveal>the receipt</p>
+          <h2 class="section__title" id="receipt-h" data-reveal>Proof, not <em>promises</em>.</h2>
+          <p class="section__lead" data-reveal>&ldquo;It sent fine&rdquo; is what other apps tell you. Todoke hands you the receipt: every file&rsquo;s BLAKE3 hash, computed as the bytes landed, checked against the manifest on both ends. This one is from an actual 50&nbsp;MiB transfer — hashes and all.</p>
+        </header>
+
+        <div class="receipt-json" data-reveal role="img" aria-label="A real Todoke receipt in JSON: received true, manifest hash, and per-file BLAKE3 hashes for payload.bin and notes.txt">
+          <div class="term__head"><span></span><span></span><span></span><span class="term__title">receipt · 50&nbsp;MiB transfer · verified</span></div>
+          <pre class="term__body"><code>{
+  <span class="j-key">"received"</span>: <span class="term__ok">true</span>,
+  <span class="j-key">"manifest_hash"</span>: <span class="j-str">"c1d75eed2b92a11826ed995a30acd4f705f802b5f90baa25fbc04f6fa484c3f9"</span>,
+  <span class="j-key">"files"</span>: [
+    {
+      <span class="j-key">"path"</span>: <span class="j-str">"payload.bin"</span>, <span class="j-key">"size"</span>: <span class="j-num">52428800</span>, <span class="j-key">"chunks"</span>: <span class="j-num">674</span>,
+      <span class="j-key">"hash"</span>: <span class="j-str">"60a5a3753a9ec77fbd490df0505357c8bb483531d133b1e67c23919522c639d8"</span>
+    },
+    {
+      <span class="j-key">"path"</span>: <span class="j-str">"notes.txt"</span>, <span class="j-key">"size"</span>: <span class="j-num">1048576</span>, <span class="j-key">"chunks"</span>: <span class="j-num">14</span>,
+      <span class="j-key">"hash"</span>: <span class="j-str">"e3b1c09015869d595e50c4ff228634dc21c366304b2d5d46d6686634809e8506"</span>
+    }
+  ]
+}</code></pre>
+        </div>
+
+        <p class="section__foot" data-reveal>Every transfer gets one — CLI and app alike. Re-run the numbers yourself: <code>todoke bench</code> ships with the engine.</p>
       </div>
     </section>
 
@@ -286,12 +337,12 @@
             <p>Not yet. v1 is local-network — that&rsquo;s where the speed lives. Cross-network relaying is designed into the transport and lands after v1, same protocol, same receipts.</p>
           </details>
           <details class="faq__item" data-reveal>
-            <summary>Why free? What&rsquo;s the catch?<span class="faq__icon" aria-hidden="true"></span></summary>
-            <p>No accounts, no servers, no telemetry — free costs us almost nothing to run, and that makes it sustainable. The whole engine is dual-licensed MIT OR Apache-2.0. If it earns it, a donation button exists. That&rsquo;s the entire business model.</p>
+            <summary>What if my network blocks device discovery?<span class="faq__icon" aria-hidden="true"></span></summary>
+            <p>Campus and public Wi-Fi often silence mDNS. Todoke has an escape hatch built in: <em>Add by address</em> on the Devices screen — paste the address, fingerprint and certificate the other machine prints, and that device is saved for every future transfer.</p>
           </details>
           <details class="faq__item" data-reveal>
-            <summary>Which platforms can I trust today?<span class="faq__icon" aria-hidden="true"></span></summary>
-            <p>Windows, macOS and Linux run the same engine with the same tests. The CLI works today; the desktop app lands with v1. Mobile comes later — the protocol was built for it from day one.</p>
+            <summary>Why free? What&rsquo;s the catch?<span class="faq__icon" aria-hidden="true"></span></summary>
+            <p>No accounts, no servers, no telemetry — free costs us almost nothing to run, and that makes it sustainable. The whole engine is dual-licensed MIT OR Apache-2.0. If it earns it, a donation button exists. That&rsquo;s the entire business model.</p>
           </details>
         </div>
       </div>
