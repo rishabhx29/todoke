@@ -10,7 +10,7 @@
     type Receipt,
     type SendEvent,
   } from "../api";
-  import { app, go } from "../state.svelte";
+  import { app, go, withManualPeers } from "../state.svelte";
   import { icons } from "../icons";
   import { copyText } from "../clipboard";
   import { etaString, formatBytes, formatSpeed, shortFp } from "../format";
@@ -116,7 +116,7 @@
     let alive = true;
     const poll = async () => {
       try {
-        const found = await listDevices(3000);
+        const found = withManualPeers(await listDevices(3000));
         if (!alive) return;
         devices = found;
         if (!selectedFp || !found.some((d) => d.fingerprint === selectedFp)) {
@@ -260,6 +260,18 @@
 
   async function copyHash(hash: string) {
     await copyText(hash);
+  }
+
+  // dev-only automation seam (demo/screenshot harness): the same real code
+  // path the dialogs and drop handler take, reachable from CDP without the
+  // native file dialog. Stripped from release builds.
+  if (import.meta.env.DEV) {
+    (window as unknown as Record<string, unknown>).__todokeSend = {
+      add: (paths: string[]) => {
+        if (phase === "pick") addPaths(paths);
+      },
+      start: () => void startSend(),
+    };
   }
 </script>
 

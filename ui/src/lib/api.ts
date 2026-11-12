@@ -18,6 +18,8 @@ export interface Device {
   certB64: string;
   addr: string;
   port: number;
+  /** true when the peer was added by address rather than discovered */
+  manual?: boolean;
 }
 
 export interface ReceiptFile {

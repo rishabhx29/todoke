@@ -1,6 +1,6 @@
 <script lang="ts">
   import { listDevices, type Device } from "../api";
-  import { app, go } from "../state.svelte";
+  import { app, addManualPeer, removeManualPeer, withManualPeers, go } from "../state.svelte";
   import { icons } from "../icons";
   import { shortFp } from "../format";
 
@@ -9,6 +9,35 @@
   let scanning = $state(false);
   let scanningSince = $state<number | null>(null);
   let showHelp = $state(false);
+  let showAdd = $state(false);
+  let form = $state({ name: "", addr: "", fingerprint: "", certB64: "" });
+  let formError = $state<string | null>(null);
+
+  function saveManual() {
+    const addr = form.addr.trim();
+    const fingerprint = form.fingerprint.trim().toUpperCase();
+    const certB64 = form.certB64.trim();
+    if (!/^\S+:\d+$/.test(addr)) {
+      formError = "Address looks like host:port — e.g. 192.168.1.24:53411";
+      return;
+    }
+    if (fingerprint.length < 8) {
+      formError = "Paste the full device fingerprint (Settings → Fingerprint on the other machine).";
+      return;
+    }
+    if (certB64.length < 40) {
+      formError = "Paste the full certificate (the long base64 line from `todoke serve --json`).";
+      return;
+    }
+    addManualPeer({
+      name: form.name.trim() || `device-${fingerprint.slice(0, 4).toLowerCase()}`,
+      addr, fingerprint, certB64,
+    });
+    form = { name: "", addr: "", fingerprint: "", certB64: "" };
+    formError = null;
+    showAdd = false;
+    devices = withManualPeers(devices);
+  }
 
   let timer: ReturnType<typeof setTimeout> | undefined;
   let alive = true;
@@ -17,7 +46,7 @@
     scanning = true;
     scanningSince = Date.now();
     try {
-      devices = await listDevices(2500);
+      devices = withManualPeers(await listDevices(2500));
       error = null;
     } catch (e) {
       error = e instanceof Error ? e.message : String(e);
@@ -55,10 +84,35 @@
       {/if}
     </p>
   </div>
-  <button type="button" class="btn btn-ghost" onclick={() => void scan()} disabled={scanning}>
-    {scanning ? "Scanning…" : "Refresh"}
-  </button>
+  <div class="head-actions">
+    <button type="button" class="btn btn-ghost" class:active={showAdd} onclick={() => (showAdd = !showAdd)} aria-expanded={showAdd}>
+      {showAdd ? "Close" : "Add by address"}
+    </button>
+    <button type="button" class="btn btn-ghost" onclick={() => void scan()} disabled={scanning}>
+      {scanning ? "Scanning…" : "Refresh"}
+    </button>
+  </div>
 </header>
+
+{#if showAdd}
+  <section class="card add-card" aria-label="Add a device by address">
+    <p class="add-lede">
+      For networks that block discovery (campus and public Wi-Fi often do):
+      run <code>todoke serve --json</code> on the other machine and paste the
+      address, fingerprint and certificate it prints.
+    </p>
+    <div class="add-grid">
+      <label><span>Name</span><input bind:value={form.name} placeholder="studio-laptop (optional)" /></label>
+      <label><span>Address</span><input bind:value={form.addr} placeholder="192.168.1.24:53411" /></label>
+      <label><span>Fingerprint</span><input bind:value={form.fingerprint} placeholder="2C83…" /></label>
+      <label class="wide"><span>Certificate (base64)</span><input bind:value={form.certB64} placeholder="MIIBYDCCARKgAwIBAgIJ…" /></label>
+    </div>
+    {#if formError}<p class="form-error" role="alert">{formError}</p>{/if}
+    <div class="add-actions">
+      <button type="button" class="btn btn-primary" onclick={saveManual}>Save device</button>
+    </div>
+  </section>
+{/if}
 
 {#if error}
   <p class="form-error" role="alert">Discovery failed: {error}</p>
@@ -73,9 +127,14 @@
           <span class="name">{d.name}</span>
           {#if d.fingerprint === app.identity?.fingerprint}
             <span class="pill pill-accent">This device</span>
+          {:else if d.manual}
+            <span class="pill">saved</span>
           {/if}
           <span class="fp">{shortFp(d.fingerprint)} · {d.addr}:{d.port}</span>
         </div>
+        {#if d.manual}
+          <button type="button" class="btn btn-ghost btn-remove" aria-label={`Remove ${d.name}`} onclick={() => removeManualPeer(d.fingerprint)}>×</button>
+        {/if}
         <button type="button" class="btn btn-primary" onclick={() => sendTo(d)}>Send…</button>
       </li>
     {/each}
@@ -259,5 +318,90 @@
     overflow-x: auto;
     user-select: text;
     text-align: left;
+  }
+
+  .head-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-ghost.active {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-color: var(--accent-line);
+  }
+
+  .add-card {
+    margin: 0 0 18px;
+    padding: 20px 22px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .add-lede {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: var(--text-2);
+    max-width: 42rem;
+  }
+
+  .add-lede code {
+    font-family: var(--mono);
+    font-size: var(--fs-xs);
+    background: var(--inset);
+    border-radius: 6px;
+    padding: 2px 6px;
+    color: var(--text);
+    user-select: text;
+  }
+
+  .add-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .add-grid label {
+    display: grid;
+    gap: 5px;
+    font-size: var(--fs-xs);
+    color: var(--text-2);
+  }
+
+  .add-grid label.wide {
+    grid-column: 1 / -1;
+  }
+
+  .add-grid input {
+    font-family: var(--mono);
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--inset);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-input);
+    padding: 9px 12px;
+    outline: none;
+    user-select: text;
+  }
+
+  .add-grid input:focus-visible {
+    outline: none;
+    border-color: var(--accent-line);
+    box-shadow: 0 0 0 2px var(--accent-soft);
+  }
+
+  .add-grid input::placeholder {
+    color: var(--text-3);
+  }
+
+  .add-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-remove {
+    min-width: 32px;
+    padding-inline: 8px;
+    font-size: 16px;
   }
 </style>
