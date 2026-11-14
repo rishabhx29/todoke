@@ -4,7 +4,7 @@ Log of decisions made during research and planning (2026-10). Sources and full c
 
 ## Product
 
-- **Name:** Dasho. Chosen for: sounds fast, one clean word, no trademark shadows, all four target domains free at standard price, playful-but-professional tone for a student/20s audience on X/Reddit/Discord.
+- **Name:** Todoke. Chosen for: sounds fast, one clean word, no trademark shadows, all four target domains free at standard price, playful-but-professional tone for a student/20s audience on X/Reddit/Discord.
 - **Shape:** "The engine" — fastest transfer + unkillable reliability + your-devices mesh — with the no-install web receiver embedded. Desktop-first (Windows/macOS/Linux); mobile later.
 - **Free, entirely, forever:** serverless-first architecture (mDNS discovery, P2P hole-punching, no accounts, no file-touching servers) makes free sustainable. Running cost target: ~$25/mo + $99/yr.
 
@@ -52,3 +52,24 @@ Log of decisions made during research and planning (2026-10). Sources and full c
 - **New name: Todoke** (届け/届く, "it arrives / deliver!") — chosen by the owner's brief (Japanese, product-resembling, cool-sounding, .tech free). Meaning aligns with the trust story: files that ARRIVE, verified by receipts. Runner-up considered: Shiden (紫電, purple lightning).
 - **Verified free at decision time**: todoke.tech, todoke.web.id (RDAP via radix.host — note rdap.nic.tech serves HTML, calibrate against the IANA bootstrap); GitHub `todokeapp`, npm `todoke-cli`.
 - Renamed: crates (todoke-core/todoke-cli), binary (`todoke`), mDNS service type (`_todoke._udp.local.`), TLS SAN suffix (`todoke.internal`), app-data dir, website copy/domain. Physical worktree paths (C:\Rishabh\dasho-app / dasho-website) and branch names (app/website) are unchanged for tooling stability. Historical docs saying "Dasho" mean Todoke.
+
+## 2026-11-04 — Cross-OS verification via Linux containers
+
+Docker (Desktop 29.9.2 + WSL2) now part of the verification loop:
+
+- **Debian (rust:1, glibc)**: full suite 72/72 after fixing two Linux-only
+  flaky races in tests (cancel/complete vs data-stream ordering — both were
+  over-assuming cross-stream ordering that QUIC never promises). Windows
+  re-verified 72/72 with the same fixes.
+- **Container↔container e2e**: serve + send across a Docker bridge network
+  (separate network stacks, real UDP/QUIC — not loopback): 50 MiB + 1 MiB,
+  byte-identical, receipt verified. Closest thing to the two-device test
+  before real hardware.
+- **Alpine (musl)**: builds clean, big-file bench 105.8 MB/s in-container.
+- **Real bug found & fixed**: `serve --json` always reported 127.0.0.1 as the
+  dialable address — useless for any remote consumer of the line. Now
+  prefers --advertise-ip, else the routing-table source IP, loopback last.
+
+macOS cannot be containerized (no macOS images exist; Apple licensing). macOS
+verification plan: GitHub Actions `macos-latest` runner once the repo is
+public — build + test suite there, plus GUI build check.

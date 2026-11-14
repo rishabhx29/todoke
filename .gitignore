@@ -1,6 +1,7 @@
 # Rust
+# Note: Cargo.lock IS committed on purpose — this workspace ships binaries
+# (dasho-cli), so reproducible builds win over crate-level politeness.
 target/
-Cargo.lock
 *.rs.bk
 
 # Node / Tauri
