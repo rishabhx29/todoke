@@ -48,7 +48,7 @@ scenarios + fixtures + environment metadata in JSON):
 |---|---|
 | `todoke.tech` | primary — to register (~$15/yr) |
 | `todoke.web.id` | defensive — verified available |
-| GitHub `todokeapp` / npm `todoke-cli` | verified available — to claim at publish |
+| GitHub `rishabhx29/todoke` / npm `todoke-cli` | **repo live** — https://github.com/rishabhx29/todoke |
 
 ## Stack (rationale in [docs/decisions.md](docs/decisions.md))
 
